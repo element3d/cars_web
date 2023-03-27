@@ -11,13 +11,25 @@ public:
 
 	std::function<void(const httplib::Request &, httplib::Response &)> MyCars();
 	std::function<void(const httplib::Request &, httplib::Response &)> TopCars();
+    std::function<void(const httplib::Request &, httplib::Response &)> NumCars();
+    std::function<void(const httplib::Request &, httplib::Response &)> CarGet();
 	std::function<void(const httplib::Request &, httplib::Response &)> CarsGet();
 	std::function<void(const httplib::Request &, httplib::Response &)> CarsPost();
+    std::function<void(const httplib::Request &, httplib::Response &)> CarsPut();
+    std::function<void(const httplib::Request &, httplib::Response &)> CarsDelete();
+    std::function<void(const httplib::Request &, httplib::Response &)> CarsSetAvatar();
 	std::function<void(const httplib::Request &, httplib::Response &)> CarsUploadAvatar();
 	std::function<void(const httplib::Request &, httplib::Response &)> CarsUploadImage();
+    std::function<void(const httplib::Request &, httplib::Response &)> CarsDeleteImage();
+    std::function<void(const httplib::Request &, httplib::Response &)> CarsUpdateStars();
+    std::function<void(const httplib::Request &, httplib::Response &)> CarsGetStars();
+    std::function<void(const httplib::Request &, httplib::Response &)> CarsRefresh();
+
+    void _ParseFilter(const httplib::Request& req, CarFilter& filter);
+
 
 private:
-	void ToJson(const std::vector<DBCar*> cars, std::string& json);
+    void ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::string& json);
 
 private:
 	static CarsRoute* sInstance;

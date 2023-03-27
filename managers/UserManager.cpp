@@ -1,6 +1,6 @@
 #include "UserManager.h"
 #include <iostream>
-
+#include "PQManager.h"
 
 UserManager* UserManager::sInstance = nullptr;
 
@@ -11,35 +11,36 @@ UserManager* UserManager::Get()
     return sInstance;
 }
 
-void UserManager::SetPG(PGconn* pPG)
-{
-	mPG = pPG;
-}
 
-void UserManager::SetPsql(pqxx::connection* pPsql)
+
+/*void UserManager::SetPsql(pqxx::connection* pPsql)
 {
     mPsql = pPsql;
-}
+}*/
 
-bool UserManager::CreateUser(const std::string& phone, const std::string& password, int type, const std::string& firstName, const std::string& secondName)
+int UserManager::CreateUser(const std::string& username, const std::string& phone, const std::string& password, int type, const std::string& firstName, const std::string& secondName)
 {
-    std::string sql = "INSERT INTO users(phone, password, type, first_name, second_name) VALUES ('"
+    std::string sql = "INSERT INTO users(username, phone, password, type, first_name, second_name, num_golds) VALUES ('"
+            + username + "', '"
             + phone + "', '" 
 			+ password + "', " 
 			+ std::to_string(type) + ", '"
 			+ firstName + "', '"
-			+ secondName +
+            + secondName + "', '"
+            + std::to_string(20) +
 			"');";
 
-	PGresult* res = PQexec(mPG, sql.c_str());
+
+    PGconn* pg = GetPQConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-		char* err = PQerrorMessage(mPG);
-		fprintf(stderr, "SELECT failed: %s", PQerrorMessage(mPG));
+        char* err = PQerrorMessage(pg);
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
 		PQclear(res);
 		//exit_nicely(conn);
-		return false;
-	}
+        return -1;
+    }
 
     /*pqxx::work W(*mPsql);
     try
@@ -52,21 +53,270 @@ bool UserManager::CreateUser(const std::string& phone, const std::string& passwo
         return false;
     }
     W.commit();*/
-    return true;
+//    return true;
+    sql = "SELECT currval('users_id_seq');";
+    res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        char* err = PQerrorMessage(pg);
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        return -1;
+    }
+    char* temp = (char*)calloc(256, sizeof(char));
+    int rec_count = PQntuples(res);
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    int id = atoi(temp);
+    free(temp);
+    return id;
 }
 #include <cstdlib>
 
-DBUser* UserManager::GetUser(const std::string& phone)
+std::vector<std::string> UserManager::UserGetAutoPartMakes(int id)
 {
-    std::string sql = "SELECT * FROM users WHERE phone = '"
-            + phone + "';";
+    std::vector<std::string> makes;
+    std::string sql = "SELECT make FROM user_auto_part_makes WHERE user_id=" + std::to_string(id) + ";";
+    PGconn* pg = GetPQConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        PQfinish(pg);
+        return makes;
+    }
 
-	PGresult* res = PQexec(mPG, sql.c_str());
+
+    int nt = PQntuples(res);
+    if (!nt)
+    {
+        PQclear(res);
+        PQfinish(pg);
+        return makes;
+    }
+
+    char* temp = (char*)calloc(256, sizeof(char));
+    for (int i = 0; i < nt; ++i)
+    {
+        strcpy(temp, PQgetvalue(res, i, 0));
+        makes.push_back(temp);
+    }
+    free(temp);
+    PQclear(res);
+    PQfinish(pg);
+    return makes;
+}
+
+std::vector<int> UserManager::UserGetAutoPartCategories(int id)
+{
+    std::vector<int> makes;
+    std::string sql = "SELECT category FROM user_auto_part_categories WHERE user_id=" + std::to_string(id) + ";";
+    PGconn* pg = GetPQConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        PQfinish(pg);
+        return makes;
+    }
+
+
+    int nt = PQntuples(res);
+    if (!nt)
+    {
+        PQclear(res);
+        PQfinish(pg);
+        return makes;
+    }
+
+    char* temp = (char*)calloc(256, sizeof(char));
+    for (int i = 0; i < nt; ++i)
+    {
+        strcpy(temp, PQgetvalue(res, i, 0));
+        makes.push_back(atoi(temp));
+    }
+    free(temp);
+    PQclear(res);
+    PQfinish(pg);
+    return makes;
+}
+
+void UserManager::UserSetAutoPartCategories(int id, const std::vector<int>& categories)
+{
+    std::string sql = "DELETE FROM user_auto_part_categories WHERE user_id=" + std::to_string(id) + ";";
+    PGconn* pg = GetPQConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    {
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        PQfinish(pg);
+        return;
+    }
+
+    PQclear(res);
+    for (auto& c: categories)
+    {
+        sql = "INSERT INTO user_auto_part_categories(user_id, category) VALUES("
+            + std::to_string(id) + ", "
+            + std::to_string(c)
+            + ");";
+
+        res = PQexec(pg, sql.c_str());
+        if (PQresultStatus(res) != PGRES_COMMAND_OK)
+        {
+            fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+            PQclear(res);
+            PQfinish(pg);
+            return;
+        }
+        PQclear(res);
+    }
+
+    PQfinish(pg);
+}
+
+void UserManager::UserSetAutoPartMakes(int id, const std::vector<std::string>& makes)
+{
+    std::string sql = "DELETE FROM user_auto_part_makes WHERE user_id=" + std::to_string(id) + ";";
+    PGconn* pg = GetPQConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    {
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        PQfinish(pg);
+        return;
+    }
+
+    PQclear(res);
+    for (auto& make: makes)
+    {
+        sql = "INSERT INTO user_auto_part_makes(user_id, make) VALUES("
+            + std::to_string(id) + ", '"
+            + make + "'"
+            + ");";
+
+        res = PQexec(pg, sql.c_str());
+        if (PQresultStatus(res) != PGRES_COMMAND_OK)
+        {
+            fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+            PQclear(res);
+            PQfinish(pg);
+            return;
+        }
+        PQclear(res);
+    }
+
+    PQfinish(pg);
+}
+
+int UserManager::GetUserNumGolds(int id)
+{
+    std::string sql = "SELECT num_golds FROM users WHERE id = " + std::to_string(id) + ";";
+    PGconn* pg = GetPQConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        PQfinish(pg);
+        return 0;
+    }
+
+    char* temp = (char*)calloc(256, sizeof(char));
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    int numGolds = atoi(temp);
+    PQclear(res);
+    PQfinish(pg);
+    free(temp);
+    return numGolds;
+}
+
+bool UserManager::UserEarnGold(int id)
+{
+    std::string sql = "UPDATE users set num_golds=num_golds+1 WHERE id = " + std::to_string(id) + ";";
+    PGconn* pg = GetPQConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        PQfinish(pg);
+        return false;
+    }
+
+    PQclear(res);
+    PQfinish(pg);
+    return true;
+}
+
+bool UserManager::UserReceiveGift(int giftId)
+{
+    std::string sql = "DELETE FROM gifts WHERE id = " + std::to_string(giftId) + ";";
+    PGconn* pg = GetPQConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        PQfinish(pg);
+        return false;
+    }
+
+    PQclear(res);
+    PQfinish(pg);
+    return true;
+}
+
+DBGift* UserManager::GetUserGift(int id)
+{
+    std::string sql = "SELECT * FROM gifts WHERE user_id = " + std::to_string(id) + ";";
+    PGconn* pg = GetPQConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        PQfinish(pg);
+        return nullptr;
+    }
+
+    int nt = PQntuples(res);
+    if (!nt)
+    {
+        PQclear(res);
+        PQfinish(pg);
+        return nullptr;
+    }
+
+    DBGift* pGift = new DBGift();
+    char* temp = (char*)calloc(256, sizeof(char));
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    pGift->Id = atoi(temp);
+
+    strcpy(temp, PQgetvalue(res, 0, 2));
+    pGift->Type = atoi(temp);
+
+    PQclear(res);
+    PQfinish(pg);
+    return pGift;
+}
+
+DBUser* UserManager::GetUser(const std::string& username)
+{
+    std::string sql = "SELECT * FROM users WHERE username = '"
+            + username + "';";
+   PGconn* pg = GetPQConnection();
+
+    PGresult* res = PQexec(pg, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-		char* err = PQerrorMessage(mPG);
-		fprintf(stderr, "SELECT failed: %s", PQerrorMessage(mPG));
+        char* err = PQerrorMessage(pg);
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
 		PQclear(res);
+         PQfinish(pg);
 		//exit_nicely(conn);
 		return nullptr;
 	}
@@ -87,26 +337,36 @@ DBUser* UserManager::GetUser(const std::string& phone)
 	strcpy(temp, PQgetvalue(res, 0, 0));
 	pUser->Id = atoi(temp);
 
-	strcpy(temp, PQgetvalue(res, 0, 1));
-	pUser->Phone = (temp);
+  strcpy(temp, PQgetvalue(res, 0, 1));
+  pUser->Username = (temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 2));
-	pUser->Password = (temp);
+	pUser->Phone = (temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 3));
-	pUser->Type = atoi(temp);
+	pUser->Password = (temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 4));
-	pUser->FirstName = (temp);
+	pUser->Type = atoi(temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 5));
-	pUser->SecondName = (temp);
+	pUser->FirstName = (temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 6));
+	pUser->SecondName = (temp);
+
+  strcpy(temp, PQgetvalue(res, 0, 7));
+  pUser->Avatar = (temp);
+
+  strcpy(temp, PQgetvalue(res, 0, 8));
+  pUser->NumGolds = atoi(temp);
+
+
+    /*strcpy(temp, PQgetvalue(res, 0, 6));
 	pUser->NumGolds = atoi(temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 7));
-	pUser->Reputation = atof(temp);
+    pUser->Reputation = atof(temp);*/
 
 /*	int rec_count = PQntuples(res);
 	for (int i = 0; i< rec_count; i++)
@@ -148,7 +408,29 @@ DBUser* UserManager::GetUser(const std::string& phone)
     pUser->Phone = phone;
     pUser->Password = pwd;*/
 	free(temp);
+    PQfinish(pg);
     return pUser;
+}
+
+bool UserManager::EditUser(int id, const std::string& firstName, const std::string& secondName, const std::string& phone)
+{
+    std::string sql = "UPDATE users SET first_name='" + firstName + "', second_name = '" + secondName + "', phone = '" + phone + "' WHERE id = "
+            + std::to_string(id) + ";";
+
+    PGconn* pg = GetPQConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        char* err = PQerrorMessage(pg);
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        PQfinish(pg);
+        //exit_nicely(conn);
+        return false;
+    }
+    PQclear(res);
+    PQfinish(pg);
+    return true;
 }
 
 DBUser* UserManager::GetUser(int id)
@@ -156,12 +438,15 @@ DBUser* UserManager::GetUser(int id)
     std::string sql = "SELECT * FROM users WHERE id = "
             + std::to_string(id) + ";";
 
-	PGresult* res = PQexec(mPG, sql.c_str());
+    PGconn* pConn = GetPQConnection();
+
+    PGresult* res = PQexec(pConn, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-		char* err = PQerrorMessage(mPG);
-		fprintf(stderr, "SELECT failed: %s", PQerrorMessage(mPG));
+        char* err = PQerrorMessage(pConn);
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
 		PQclear(res);
+        CloseConnection(pConn);
 		//exit_nicely(conn);
 		return nullptr;
 	}
@@ -171,26 +456,35 @@ DBUser* UserManager::GetUser(int id)
 	strcpy(temp, PQgetvalue(res, 0, 0));
 	pUser->Id = atoi(temp);
 
-	strcpy(temp, PQgetvalue(res, 0, 1));
-	pUser->Phone = (temp);
+  strcpy(temp, PQgetvalue(res, 0, 1));
+  pUser->Username = (temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 2));
-	pUser->Password = (temp);
+	pUser->Phone = (temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 3));
-	pUser->Type = atoi(temp);
+	pUser->Password = (temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 4));
-	pUser->FirstName = (temp);
+	pUser->Type = atoi(temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 5));
-	pUser->SecondName = (temp);
+	pUser->FirstName = (temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 6));
+	pUser->SecondName = (temp);
+
+  strcpy(temp, PQgetvalue(res, 0, 7));
+  pUser->Avatar = (temp);
+
+  strcpy(temp, PQgetvalue(res, 0, 8));
+  pUser->NumGolds = atoi(temp);
+
+/*	strcpy(temp, PQgetvalue(res, 0, 6));
 	pUser->NumGolds = atoi(temp);
 
 	strcpy(temp, PQgetvalue(res, 0, 7));
-	pUser->Reputation = atof(temp);
+    pUser->Reputation = atof(temp);*/
 
   /*  pqxx::nontransaction N(*mPsql);
     pqxx::result R;
@@ -218,6 +512,25 @@ DBUser* UserManager::GetUser(int id)
     DBUser* pUser = new DBUser();
     pUser->Id = id;
     pUser->Phone = ph;*/
+    CloseConnection(pConn);
 	free(temp);
     return pUser;
+}
+
+bool UserManager::SetUserAvatar(int userId, const std::string& avatarPath)
+{
+    std::string sql = "UPDATE users SET avatar = '" + avatarPath + "' WHERE id = " + std::to_string(userId) + ";";
+    PGconn* pg = GetPQConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    {
+        char* err = PQerrorMessage(pg);
+        fprintf(stderr, "Add car image failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        PQfinish(pg);
+        return false;
+    }
+    PQclear(res);
+    PQfinish(pg);
+    return true;
 }
