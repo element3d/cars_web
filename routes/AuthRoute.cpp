@@ -40,6 +40,9 @@ int sign_in(const std::string& username, const std::string& password, std::strin
 std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::SignUp()
 {
     return [](const httplib::Request& req, httplib::Response& res){
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "*");
+        res.set_header("Access-Control-Allow-Headers", "*");
         std::cout << req.body;
 
         rapidjson::Document document;
