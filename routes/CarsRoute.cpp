@@ -19,11 +19,11 @@ CarsRoute* CarsRoute::Get()
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::MyCars()
 {
 	return [this](const httplib::Request& req, httplib::Response& res) {
-   res.set_header("Access-Control-Allow-Methods", " POST, GET, OPTIONS");
-			res.set_header("Content-Type", "text/html; charset=utf-8");
-			res.set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authentication");
-			res.set_header("Access-Control-Allow-Origin", "*");
-			res.set_header("Connection", "close");
+    res.set_header("Access-Control-Allow-Methods", " POST, GET, OPTIONS");
+		res.set_header("Content-Type", "text/html; charset=utf-8");
+	  res.set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authentication");
+		res.set_header("Access-Control-Allow-Origin", "*");
+		res.set_header("Connection", "close");
 
 		std::string token = req.get_header_value("Authentication");
 
@@ -175,6 +175,10 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsPost()
 {
 	return [](const httplib::Request& req, httplib::Response& res) {
+
+     res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
         std::string token = req.get_header_value("Authentication");
         auto decoded = jwt::decode(token);
         int userId = decoded.get_payload_claim("id").as_int();
@@ -193,6 +197,12 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsPut()
 {
     return [](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+		    /*res.set_header("Content-Type", "text/html; charset=utf-8");
+	      res.set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authentication");
+		    res.set_header("Connection", "close");*/
+
         std::string token = req.get_header_value("Authentication");
         auto decoded = jwt::decode(token);
         int userId = decoded.get_payload_claim("id").as_int();
@@ -218,6 +228,11 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsDelete()
 {
     return [](const httplib::Request& req, httplib::Response& res) {
+
+         res.set_header("Access-Control-Allow-Methods", " POST, GET, DELETE, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+
         std::string token = req.get_header_value("Authentication");
         auto decoded = jwt::decode(token);
         int userId = decoded.get_payload_claim("id").as_int();
@@ -390,6 +405,10 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsUploadImage()
 {
 	return [](const httplib::Request& req, httplib::Response& res) {
+
+     res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+     res.set_header("Access-Control-Allow-Origin", "*");
+
         if (/*!req.has_param("user_id") ||*/ !req.has_param("car_id"))
 		{
 			res.status = 206;
@@ -426,7 +445,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
         if (isAva)
             CarManager::Get()->SetCarAvatar(atoi(carId.c_str()), id);
 
-         res.set_header("Access-Control-Allow-Origin", "*");
+       //  res.set_header("Access-Control-Allow-Origin", "*");
         res.set_content(std::to_string(id).c_str(), "text/plain");
 		res.status = 200;
 	};

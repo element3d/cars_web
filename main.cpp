@@ -287,7 +287,7 @@ int main(void) {
 
     svr.Options("/(.*)",
 			[&](const Request & /*req*/, Response &res) {
-			res.set_header("Access-Control-Allow-Methods", " POST, GET, OPTIONS");
+			res.set_header("Access-Control-Allow-Methods", " POST, GET, DELETE, PUT, OPTIONS");
 			res.set_header("Content-Type", "text/html; charset=utf-8");
 			res.set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authentication");
 			res.set_header("Access-Control-Allow-Origin", "*");
