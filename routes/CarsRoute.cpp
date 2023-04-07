@@ -389,6 +389,11 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsDeleteImage()
 {
     return [](const httplib::Request& req, httplib::Response& res) {
+       res.set_header("Access-Control-Allow-Methods", " POST, GET, DELETE, OPTIONS");
+		res.set_header("Content-Type", "text/html; charset=utf-8");
+	  res.set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authentication");
+		res.set_header("Access-Control-Allow-Origin", "*");
+		res.set_header("Connection", "close");
         if (!req.has_param("car_id") || !req.has_param("image_id"))
         {
             res.status = 206;
