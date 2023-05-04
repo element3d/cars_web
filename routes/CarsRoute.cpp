@@ -312,10 +312,29 @@ std::string  gen_random(int len) {
 #include "../stb_image/stb_image_write.h"
 
 #include "../anvir/avir.h"
+#include "../libwebp/src/webp/decode.h"
 
-void Upload(void * data, int size, std::string fullPath, std::string filename) {
+enum class EImageContentType 
+{
+  Jpeg,
+  Png,
+  Webp
+};
+
+void Upload(void * data, int size, std::string fullPath, std::string filename, EImageContentType contentType) 
+{
+
+
     int w, h, c;
-    unsigned char* d = stbi_load_from_memory((unsigned char*)data, size, &w, &h, &c, 0);
+    unsigned char* d = nullptr;
+
+    if (contentType == EImageContentType::Webp)
+    {
+      c = 3;
+      d = WebPDecodeRGB((const uint8_t*)data, size, &w, &h);
+    }
+    else
+      d = stbi_load_from_memory((unsigned char*)data, size, &w, &h, &c, 0);
 
     int nw = 400;
     int nh = int(400.f * h / w);
@@ -380,7 +399,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 
         std::cout << "Upload avatar ............................................\n";
         std::cout << "filename " << filename << std::endl;
-        Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, "avatar");
+        Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, "avatar", EImageContentType::Jpeg);
 		CarManager::Get()->SetCarAvatar(atoi(carId.c_str()), filename);
 		res.status = 200;
 	};
@@ -440,7 +459,10 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 //		std::ofstream ofs(filename, std::ios::binary);
 //		ofs << image_file.content;
 
-        Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, rn);
+        EImageContentType ct = EImageContentType::Jpeg;
+        if (image_file.content_type == std::string("image/webp")) ct = EImageContentType::Webp;
+
+        Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, rn, ct);
         bool isAva = atoi(isAvatar.content.c_str());
 
 

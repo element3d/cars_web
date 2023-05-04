@@ -3,6 +3,8 @@ PROJECT("cars_web")
 #set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD 17)
 
+add_subdirectory(libwebp)
+
 set (LIBS_DIR ${CMAKE_SOURCE_DIR}/libs)
 include_directories(${LIBS_DIR}/pqxx/include)
 include_directories(${LIBS_DIR}/openssl/include)
@@ -54,6 +56,8 @@ add_executable(cron_main
 
 target_link_libraries(cars_web 
 	#${LIBS_DIR}/pqxx/lib/x64/pqxx.lib
+          webp
+        webpdecode
       libcrypto
         libssl
 	libpq
@@ -68,6 +72,7 @@ target_link_libraries(cron_main
         #crypto
         #ssl
         libpq
+
        # pthread
 
         #	"C:\\Program Files\\PostgreSQL\\9.6\\lib\\libpq.lib"

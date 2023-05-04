@@ -435,6 +435,7 @@ bool UserManager::EditUser(int id, const std::string& firstName, const std::stri
 
 DBUser* UserManager::GetUser(int id)
 {
+  if (id < 0) return nullptr;
     std::string sql = "SELECT * FROM users WHERE id = "
             + std::to_string(id) + ";";
 
