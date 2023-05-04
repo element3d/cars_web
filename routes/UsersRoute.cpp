@@ -372,8 +372,9 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::E
 std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::GetUser()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {
-        res.set_header("Access-Control-Allow-Methods", " POST, GET, OPTIONS");
+         res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
         res.set_header("Access-Control-Allow-Origin", "*");
+
         DBUser* pUser = nullptr;
 
         if (req.has_param("user_id"))
