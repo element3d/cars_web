@@ -351,6 +351,9 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::G
 std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::EditUser()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
         std::string token = req.get_header_value("Authentication");
 
         auto decoded = jwt::decode(token);
@@ -369,6 +372,8 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::E
 std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::GetUser()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
         DBUser* pUser = nullptr;
 
         if (req.has_param("user_id"))

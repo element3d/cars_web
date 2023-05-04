@@ -338,6 +338,11 @@ void Upload(void * data, int size, std::string fullPath, std::string filename) {
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsSetAvatar()
 {
     return [](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, DELETE, OPTIONS");
+        res.set_header("Content-Type", "text/html; charset=utf-8");
+        res.set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authentication");
+        res.set_header("Access-Control-Allow-Origin", "*");
+        
         if (!req.has_param("car_id"))
         {
             res.status = 206;
