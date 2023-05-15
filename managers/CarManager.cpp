@@ -65,8 +65,8 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
         + std::to_string(userId) + ", '"
         + d["make"].GetString() + "', '"
         + d["class"].GetString() + "', '"
-        + d["model"].GetString() + "', "
-		+ std::to_string(d["submodel"].GetInt()) + ", "
+        + d["model"].GetString() + "', '"
+		    + d["submodel"].GetString() + "', "
 		+ std::to_string(d["country"].GetInt()) + ", "
 		+ std::to_string(d["province"].GetInt()) + ", "
 		+ std::to_string(d["sub_province"].GetInt()) + ", "
@@ -801,7 +801,7 @@ bool CarManager::_ParseGPResult(PGresult* res, std::vector<DBCar*>& cars)
         pCar->Model = temp;
 
 		strcpy(temp, PQgetvalue(res, i, 5));
-		pCar->Submodel = atoi(temp);
+		pCar->Submodel = temp;
 
 		strcpy(temp, PQgetvalue(res, i, 6));
 		pCar->Country = atoi(temp);

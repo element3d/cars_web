@@ -25,7 +25,7 @@ struct DBCar
     std::string Make;
     std::string Class;
     std::string Model;
-	int Submodel;
+	  std::string Submodel;
 	int Country;
 	int Province;
 	int SubProvince;
