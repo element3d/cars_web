@@ -53,7 +53,7 @@ const char *html = R"(
 int main(void) {
     Server svr;
 
-    PGconn* pg = PQconnectdb("host=127.0.0.1 port=5432 dbname=cars user=postgres password=Narek_28");
+    PGconn* pg = PQconnectdb("host=127.0.0.1 port=5432 dbname=cars user=postgres password=postgres");
 
 
 
@@ -525,5 +525,5 @@ int main(void) {
     auto ret = svr.set_mount_point("/assets", "./assets");
 	ret = svr.set_mount_point("/data", "./data");
 
-    svr.listen("127.0.0.1", 1234);
+    svr.listen("192.168.1.5", 1234);
 }

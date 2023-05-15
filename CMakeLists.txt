@@ -10,8 +10,8 @@ include_directories(${LIBS_DIR}/pqxx/include)
 include_directories(${LIBS_DIR}/openssl/include)
 include_directories(${LIBS_DIR}/rapidjson)
 include_directories(${LIBS_DIR})
-include_directories("C:/Program Files/PostgreSQL/12/include")
-link_directories("C:\\Program Files\\PostgreSQL\\12\\lib")
+include_directories("C:/Program Files/PostgreSQL/15/include")
+link_directories("C:\\Program Files\\PostgreSQL\\15\\lib")
 include_directories("C:\\Program Files\\PostgreSQL\\9.6\\include")
 add_executable(cars_web
     main.cpp
@@ -58,14 +58,15 @@ target_link_libraries(cars_web
 	#${LIBS_DIR}/pqxx/lib/x64/pqxx.lib
           webp
         webpdecode
-      libcrypto
-        libssl
+
+     # libcrypto
+       # libssl
 	libpq
 	#pthread
 
 	#	"C:\\Program Files\\PostgreSQL\\9.6\\lib\\libpq.lib"
-#	${LIBS_DIR}/openssl/lib/x64/libssl.lib
-#	${LIBS_DIR}/openssl/lib/x64/libcrypto.lib
+	${LIBS_DIR}/openssl/lib/x64/libssl.lib
+	${LIBS_DIR}/openssl/lib/x64/libcrypto.lib
 )
 
 target_link_libraries(cron_main
