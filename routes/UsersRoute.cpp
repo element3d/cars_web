@@ -390,6 +390,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::G
         if (!pUser)
         {
             res.status = 404;
+            res.set_content("{}", "application/json");
             return;
         }
 

@@ -635,8 +635,8 @@ void CarsRoute::ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::st
         v.SetString(pCar->Model.c_str(), d.GetAllocator());
 		o.AddMember("model", v, d.GetAllocator());
 
-		v.SetInt(pCar->Submodel);
-		o.AddMember("sub_model", v, d.GetAllocator());
+		v.SetString(pCar->Submodel.c_str(), d.GetAllocator());
+		o.AddMember("submodel", v, d.GetAllocator());
 
 		v.SetInt(pCar->Country);
 		o.AddMember("country", v, d.GetAllocator());
