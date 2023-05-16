@@ -76,7 +76,7 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
 		+ std::to_string(d["engine_type"].GetInt()) + ", "
 		+ std::to_string(d["engine_size"].GetFloat()) + ", "
 		+ std::to_string(d["engine_power"].GetInt()) + ", "
-       // + std::to_string(/*d["acc_0_100"].GetFloat()*/0) + ", "
+    + std::to_string(d["drive_type"].GetInt()) + ", "
 		+ std::to_string(d["transmission"].GetInt()) + ", "
 		+ std::to_string(d["stearing_wheel"].GetInt()) + ", "
 		+ std::to_string(d["exchange"].GetInt()) + ", "
@@ -248,12 +248,13 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
             + " make='" + d["make"].GetString()
             + "' ,class='" + d["class"].GetString()
             + "' ,model='" + d["model"].GetString()
-            + "' ,submodel=" + std::to_string(d["submodel"].GetInt())
-            + " ,country=" + std::to_string(d["country"].GetInt())
+            + "' ,submodel='" + d["submodel"].GetString()
+            + "' ,country=" + std::to_string(d["country"].GetInt())
             + " ,province=" + std::to_string(d["province"].GetInt())
             + " ,sub_province=" + std::to_string(d["sub_province"].GetInt())
             + " ,price=" + std::to_string(d["price"].GetInt())
             + " ,body_type=" + std::to_string(d["body_type"].GetInt())
+            + " ,drive_type=" + std::to_string(d["drive_type"].GetInt())
             + " ,year=" + std::to_string(d["year"].GetInt())
             + " ,engine_type=" + std::to_string(d["engine_type"].GetInt())
             + " ,engine_size=" + std::to_string(d["engine_size"].GetFloat())
@@ -831,7 +832,7 @@ bool CarManager::_ParseGPResult(PGresult* res, std::vector<DBCar*>& cars)
 		pCar->EnginePower = atoi(temp);
 
 		strcpy(temp, PQgetvalue(res, i, 15));
-		pCar->Acc0To100 = atof(temp);
+		pCar->DriveType = atoi(temp);
 
 		strcpy(temp, PQgetvalue(res, i, 16));
 		pCar->Transmission = atoi(temp);

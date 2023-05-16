@@ -35,7 +35,7 @@ struct DBCar
 	int EngineType;
 	float EngineSize;
 	int EnginePower;
-	float Acc0To100;
+	int DriveType;
 	int Transmission;
 	int StearingWheel;
 	bool Exchange;
