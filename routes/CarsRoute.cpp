@@ -536,6 +536,8 @@ void CarsRoute::_ParseFilter(const httplib::Request& req, CarFilter& filter)
     int province = -1;
     if (req.has_param("province")) province = atoi(req.get_param_value("province", 0).c_str());
 
+    std::string submodel = "all";
+    if (req.has_param("submodel")) submodel = req.get_param_value("submodel", 0).c_str();
     std::string model = "all";
     if (req.has_param("model")) model = req.get_param_value("model", 0).c_str();
     std::string serie = "all";
@@ -587,6 +589,7 @@ void CarsRoute::_ParseFilter(const httplib::Request& req, CarFilter& filter)
     filter.Make = make;
     filter.Class = serie;
     filter.Model = model;
+    filter.SubModel = submodel;
     filter.PriceFrom = priceFrom;
     filter.PriceTo = priceTo;
     filter.YearFrom = yearFrom;

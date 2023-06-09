@@ -61,7 +61,7 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
         onTopTs = 0;
     }
 
-    sql = "INSERT INTO cars(user_id , make, class, model, submodel, country, province, sub_province, price, body_type, year, engine_type, engine_size, engine_power, transmission, stearing_wheel, exchange, customs_cleared, color, mileage, description, on_sale, on_top, on_top_ts, refresh_ts) VALUES ("
+    sql = "INSERT INTO cars(user_id , make, class, model, submodel, country, province, sub_province, price, body_type, year, engine_type, engine_size, engine_power, drive_type, transmission, stearing_wheel, exchange, customs_cleared, color, mileage, description, on_sale, on_top, on_top_ts, refresh_ts) VALUES ("
         + std::to_string(userId) + ", '"
         + d["make"].GetString() + "', '"
         + d["class"].GetString() + "', '"
@@ -447,7 +447,11 @@ void CarManager::GetCars(const CarFilter& filter, int page, std::vector<DBCar*>&
 	std::string sql;
     sql = std::string("SELECT * FROM cars");
 
-    if (filter.Model != "all")
+    if (filter.SubModel != "all")
+    {
+        sql += " WHERE submodel='" + filter.SubModel + "'";
+    }
+    else if (filter.Model != "all")
     {
         sql += " WHERE model='" + filter.Model + "'";
     }
@@ -521,16 +525,16 @@ void CarManager::GetCars(const CarFilter& filter, int page, std::vector<DBCar*>&
     {
         sql += " AND customs_cleared=" + std::to_string(filter.CustomsCleared);
     }
-    if (filter.Exchange >= 0)
+    if (filter.Exchange > 0)
     {
         sql += " AND exchange=" + std::to_string(filter.Exchange);
     }
 
-    if (filter.OnSale >= 0)
+    if (filter.OnSale > 0)
     {
         sql += " AND on_sale=" + std::to_string(filter.OnSale);
     }
-    sql += " order by refresh_ts desc limit 4 offset " + std::to_string(4 * (page - 1)) + ";";
+    sql += " order by refresh_ts desc limit 4 offset " + std::to_string(4 * std::max((page - 1), 0)) + ";";
 
     /*if (filter.Make == -1)
 	{

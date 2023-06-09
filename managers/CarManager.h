@@ -57,6 +57,7 @@ struct CarFilter
     std::string Make;
     std::string Class;
     std::string Model;
+    std::string SubModel;
     int PriceFrom;
     int PriceTo;
     int YearFrom;
