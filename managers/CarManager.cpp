@@ -495,6 +495,11 @@ void CarManager::GetCars(const CarFilter& filter, int page, std::vector<DBCar*>&
     {
         sql += " AND body_type=" + std::to_string(filter.BodyType);
     }
+    
+    if (filter.DriveType >= 0)
+    {
+        sql += " AND drive_type=" + std::to_string(filter.DriveType);
+    }
     if (filter.EngineType >= 0)
     {
         sql += " AND engine_type=" + std::to_string(filter.EngineType);

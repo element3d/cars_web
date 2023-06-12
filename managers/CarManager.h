@@ -63,6 +63,7 @@ struct CarFilter
     int YearFrom;
     int YearTo;
     int BodyType;
+    int DriveType;
     int EngineType;
     int EngineSizeFrom;
     int EngineSizeTo;
