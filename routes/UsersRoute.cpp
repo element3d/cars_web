@@ -403,3 +403,27 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::G
     };
 }
 
+#include "../managers/CarManager.h"
+
+std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::GetUserCars()
+{
+  return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+        
+        std::string userId = (req.get_param_value("user_id", 0).c_str());
+        std::vector<DBCar*> cars;
+        CarManager::Get()->GetCars(atoi(userId.c_str()), cars);
+        
+        std::string json;
+        CarManager::Get()->ToJson(cars.size(), cars, json);
+        res.set_content(json, "application/json");
+        for (auto pCar : cars)
+          delete pCar;
+     
+
+        res.status = 200;
+        res.set_content(json, "application/json");
+    };
+}
+

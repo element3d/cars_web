@@ -1089,6 +1089,140 @@ void CarManager::Refresh(int carId)
     CloseConnection(pConn);
 }
 
+void CarManager::ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::string& json)
+{
+	rapidjson::Document d;
+    d.SetObject();
+    rapidjson::Value tnc;
+    tnc.SetInt(totalNumCars);
+    d.AddMember("totalNumCars", tnc, d.GetAllocator());
+
+    rapidjson::Value vcars;
+    vcars.SetArray();
+	for (auto pCar : cars)
+	{
+		rapidjson::Value o;
+		o.SetObject();
+		rapidjson::Value v;
+
+		v.SetInt(pCar->Id);
+		o.AddMember("id", v, d.GetAllocator());
+
+		v.SetInt(pCar->UserId);
+		o.AddMember("user_id", v, d.GetAllocator());
+
+        v.SetString(pCar->Make.c_str(), d.GetAllocator());
+		o.AddMember("make", v, d.GetAllocator());
+
+        v.SetString(pCar->Class.c_str(), d.GetAllocator());
+		o.AddMember("class", v, d.GetAllocator());
+
+        v.SetString(pCar->Model.c_str(), d.GetAllocator());
+		o.AddMember("model", v, d.GetAllocator());
+
+		v.SetString(pCar->Submodel.c_str(), d.GetAllocator());
+		o.AddMember("submodel", v, d.GetAllocator());
+
+		v.SetInt(pCar->Country);
+		o.AddMember("country", v, d.GetAllocator());
+
+		v.SetInt(pCar->Province);
+		o.AddMember("province", v, d.GetAllocator());
+
+		v.SetInt(pCar->SubProvince);
+		o.AddMember("sub_province", v, d.GetAllocator());
+
+//		v.SetInt(pCar->Class);
+//		o.AddMember("class", v, d.GetAllocator());
+
+//		v.SetInt(pCar->Model);
+//		o.AddMember("model", v, d.GetAllocator());
+
+		v.SetInt(pCar->Price);
+		o.AddMember("price", v, d.GetAllocator());
+
+		v.SetInt(pCar->BodyType);
+		o.AddMember("body_type", v, d.GetAllocator());
+
+		v.SetInt(pCar->Year);
+		o.AddMember("year", v, d.GetAllocator());
+
+		v.SetInt(pCar->EngineType);
+		o.AddMember("engine_type", v, d.GetAllocator());
+
+        v.SetFloat(pCar->EngineSize);
+		o.AddMember("engine_size", v, d.GetAllocator());
+
+		v.SetInt(pCar->EnginePower);
+		o.AddMember("engine_power", v, d.GetAllocator());
+
+		v.SetInt(pCar->DriveType);
+		o.AddMember("drive_type", v, d.GetAllocator());
+
+		v.SetInt(pCar->Transmission);
+		o.AddMember("transmission", v, d.GetAllocator());
+
+		v.SetInt(pCar->StearingWheel);
+		o.AddMember("stearing_wheel", v, d.GetAllocator());
+
+		v.SetInt(pCar->Exchange);
+		o.AddMember("exchange", v, d.GetAllocator());
+
+		v.SetInt(pCar->CustomsCleared);
+		o.AddMember("customs_cleared", v, d.GetAllocator());
+
+		v.SetInt(pCar->Color);
+		o.AddMember("color", v, d.GetAllocator());
+
+        v.SetInt(pCar->Mileage);
+        o.AddMember("mileage", v, d.GetAllocator());
+
+        v.SetString(pCar->Description.c_str(), d.GetAllocator());
+        o.AddMember("description", v, d.GetAllocator());
+
+//		v.SetString(pCar->Avatar.c_str(), d.GetAllocator());
+//		o.AddMember("avatar", v, d.GetAllocator());
+
+        v.SetInt(pCar->AvatarImageId);
+        o.AddMember("avatar_image_id", v, d.GetAllocator());
+
+		v.SetInt(pCar->OnSale);
+		o.AddMember("on_sale", v, d.GetAllocator());
+
+		v.SetInt(pCar->OnTop);
+		o.AddMember("on_top", v, d.GetAllocator());
+
+        v.SetDouble(pCar->RefreshTs);
+        o.AddMember("refresh_ts", v, d.GetAllocator());
+
+		v.SetArray();
+		for (auto& i : pCar->Images)
+		{
+            rapidjson::Value vcar;
+            vcar.SetObject();
+            rapidjson::Value va;
+            va.SetString(i.ImagePath.c_str(), d.GetAllocator());
+            vcar.AddMember("uri", va, d.GetAllocator());
+            va.SetInt(i.Id);
+            vcar.AddMember("id", va, d.GetAllocator());
+
+            v.PushBack(vcar, d.GetAllocator());
+		}
+		o.AddMember("images", v,d.GetAllocator());
+
+        vcars.PushBack(o, d.GetAllocator());
+	}
+    d.AddMember("cars", vcars, d.GetAllocator());
+	
+	rapidjson::StringBuffer buffer;
+	buffer.Clear();
+
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	d.Accept(writer);
+	json = buffer.GetString();
+}
+
+
 bool CarManager::UpdateCarStars(int userId, int carId, int numStars)
 {
     {

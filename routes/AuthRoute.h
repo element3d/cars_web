@@ -8,6 +8,7 @@ class AuthRoute
 public:
     static AuthRoute* Get();
 
+    std::function<void(const httplib::Request &, httplib::Response &)> SignUpVerify();
     std::function<void(const httplib::Request &, httplib::Response &)> SignUp();
     std::function<void(const httplib::Request &, httplib::Response &)> SignIn();
 

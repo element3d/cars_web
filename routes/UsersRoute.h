@@ -13,6 +13,7 @@ public:
     std::function<void(const httplib::Request &, httplib::Response &)> MeUpdateAvatar();
     std::function<void(const httplib::Request &, httplib::Response &)> GetUser();
     std::function<void(const httplib::Request &, httplib::Response &)> EditUser();
+    std::function<void(const httplib::Request &, httplib::Response &)> GetUserCars();
     std::function<void(const httplib::Request &, httplib::Response &)> UserGetAutoPartMakes();
     std::function<void(const httplib::Request &, httplib::Response &)> UserSetAutoPartMakes();
     std::function<void(const httplib::Request &, httplib::Response &)> UserGetAutoPartCategories();

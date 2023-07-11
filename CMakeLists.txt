@@ -3,15 +3,27 @@ PROJECT("cars_web")
 #set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD 17)
 
+# Set the binary directory to a specific path
+set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
+
+# Specify the output directory for executables and libraries
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+add_subdirectory(third_party/cpr)
+
 add_subdirectory(libwebp)
+#find_package(WebP)
+
 
 set (LIBS_DIR ${CMAKE_SOURCE_DIR}/libs)
 include_directories(${LIBS_DIR}/pqxx/include)
 include_directories(${LIBS_DIR}/openssl/include)
 include_directories(${LIBS_DIR}/rapidjson)
 include_directories(${LIBS_DIR})
-include_directories("C:/Program Files/PostgreSQL/15/include")
-link_directories("C:\\Program Files\\PostgreSQL\\15\\lib")
+include_directories("C:/Program Files/PostgreSQL/12/include")
+link_directories("C:\\Program Files\\PostgreSQL\\12\\lib")
 include_directories("C:\\Program Files\\PostgreSQL\\9.6\\include")
 add_executable(cars_web
     main.cpp
@@ -56,12 +68,14 @@ add_executable(cron_main
 
 target_link_libraries(cars_web 
 	#${LIBS_DIR}/pqxx/lib/x64/pqxx.lib
-          webp
-        webpdecode
+         webp
+        webpdecoder
+       # ${WebP_LIBRARIES}
 
      # libcrypto
        # libssl
 	libpq
+  cpr::cpr
 	#pthread
 
 	#	"C:\\Program Files\\PostgreSQL\\9.6\\lib\\libpq.lib"

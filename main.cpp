@@ -50,10 +50,11 @@ const char *html = R"(
 #include "routes/AuthRoute.h"
 #include <libpq-fe.h>
 
-int main(void) {
+int main(void) 
+{
     Server svr;
 
-    PGconn* pg = PQconnectdb("host=127.0.0.1 port=5432 dbname=cars user=postgres password=postgres");
+    PGconn* pg = PQconnectdb("host=127.0.0.1 port=5432 dbname=cars user=postgres password=Narek_28");
 
 
 
@@ -452,6 +453,7 @@ int main(void) {
 
 
     svr.Post("/api/v1/signup", AuthRoute::Get()->SignUp());
+    svr.Post("/api/v1/signup/verify", AuthRoute::Get()->SignUpVerify());
     svr.Post("/api/v1/signin", AuthRoute::Get()->SignIn());
 
     svr.Get("/api/v1/me", UsersRoute::Get()->Me());
@@ -459,6 +461,7 @@ int main(void) {
     svr.Put("/api/v1/me/avatar", UsersRoute::Get()->MeUpdateAvatar());
     svr.Get("/api/v1/user", UsersRoute::Get()->GetUser());
     svr.Put("/api/v1/user", UsersRoute::Get()->EditUser());
+    svr.Get("/api/v1/users/cars", UsersRoute::Get()->GetUserCars());
     svr.Get("/api/v1/users/auto_part_makes", UsersRoute::Get()->UserGetAutoPartMakes());
     svr.Put("/api/v1/users/auto_part_makes", UsersRoute::Get()->UserSetAutoPartMakes());
     svr.Get("/api/v1/users/auto_part_categories", UsersRoute::Get()->UserGetAutoPartCategories());
@@ -525,5 +528,5 @@ int main(void) {
     auto ret = svr.set_mount_point("/assets", "./assets");
 	ret = svr.set_mount_point("/data", "./data");
 
-    svr.listen("192.168.1.5", 1234);
+    svr.listen("192.168.18.133", 1234);
 }

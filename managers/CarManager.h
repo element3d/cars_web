@@ -107,7 +107,7 @@ public:
     int CreateCar(int userId, const std::string& carJson);
     bool EditCar(int userId, int id, const std::string& carJson);
     bool DeleteCar(int userId, int id);
-	void GetCars(int userId, std::vector<DBCar*>& cars);
+	  void GetCars(int userId, std::vector<DBCar*>& cars);
     DBCar* GetCar(int carId);
     void GetCars(const CarFilter& filter, int page, std::vector<DBCar*>& cars);
     int GetTotalNumCars(const CarFilter& filter);
@@ -124,6 +124,7 @@ public:
     bool UpdateCarStars(int userId, int carId, int numStars);
     int GetCarStars(int carId);
     void Refresh(int carId);
+    void ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::string& json);
 private:
 	bool _ParseGPResult(PGresult* res, std::vector<DBCar*>& cars);
 

@@ -37,6 +37,96 @@ int sign_in(const std::string& username, const std::string& password, std::strin
     return 200;
 }
 
+#include <cpr/cpr.h>
+bool verify_phone_number(const std::string& phone) 
+{
+  std::string account_sid = "AC1d8b8057883ba3e52709ada81d688318";
+    std::string auth_token = "523c327ce9853607405e5147da5cc41f";
+    std::string service_sid = "VA86f2076b23370a9e3436e042643b3ac6";
+    std::string to_number = phone;
+
+    std::string url = "https://verify.twilio.com/v2/Services/" + service_sid + "/Verifications";
+    std::string username = account_sid;
+    std::string password = auth_token;
+
+    cpr::Payload payload = 
+    {
+        {"To", to_number},
+        {"Channel", "sms"}
+    };
+
+    cpr::Response response = cpr::Post(cpr::Url{url},
+                                       cpr::Authentication{username, password},
+                                       cpr::Payload{payload});
+
+    if (response.status_code == 201) 
+    {
+        std::cout << "Verification request sent successfully" << std::endl;
+        return true;
+    } 
+    else 
+    {
+        std::cerr << "Failed to send verification request: " << response.text << std::endl;
+        return false;
+    }
+
+}
+
+bool verify_twilio_code(const std::string& phone, const std::string& code) 
+{
+    std::string account_sid = "AC1d8b8057883ba3e52709ada81d688318";
+    std::string auth_token = "523c327ce9853607405e5147da5cc41f";
+    std::string service_sid = "VA86f2076b23370a9e3436e042643b3ac6";
+    std::string to_number = phone;
+    std::string verification_code = code;
+
+    std::string url = "https://verify.twilio.com/v2/Services/" + service_sid + "/VerificationCheck";
+    std::string username = account_sid;
+    std::string password = auth_token;
+
+    cpr::Payload payload = 
+    {
+        {"To", to_number},
+        {"Code", verification_code}
+    };
+
+    cpr::Response response = cpr::Post(cpr::Url{url},
+                                       cpr::Authentication{username, password},
+                                       cpr::Payload{payload});
+
+    if (response.status_code == 200) 
+    {
+        std::cout << "Verification check successful" << std::endl;
+        return true;
+    } else 
+    {
+        std::cerr << "Failed to perform verification check: " << response.text << std::endl;
+        return false;
+    }
+}
+
+std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::SignUpVerify()
+{
+    return [](const httplib::Request& req, httplib::Response& res){
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "*");
+        res.set_header("Access-Control-Allow-Headers", "*");
+        std::cout << req.body;
+
+        rapidjson::Document document;
+        document.Parse(req.body.c_str());
+
+        std::string phone = document["phone"].GetString();
+
+        bool success = verify_phone_number(phone);
+        if (success)
+          res.status = 200;
+        else
+          res.status = 400;
+        res.set_content("", "text/plain");
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::SignUp()
 {
     return [](const httplib::Request& req, httplib::Response& res){
@@ -53,9 +143,16 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
         std::string pwd = document["password"].GetString();
 		int type = document["type"].GetInt();
 		std::string firstName = document["first_name"].GetString();
-		std::string secondName = document["second_name"].GetString();
+		std::string code = document["code"].GetString();
 
-        int userId = UserManager::Get()->CreateUser(username, phone, pwd, type, firstName, secondName);
+        bool ret = verify_twilio_code(std::string("+374") + phone, code);
+        if (!ret) 
+        {
+           res.status = 400;
+           res.set_content("", "text/plain");
+           return;
+        }
+        int userId = UserManager::Get()->CreateUser(username, phone, pwd, type, firstName, "");
 
         res.status = 200;
         res.set_content(std::to_string(userId), "text/plain");

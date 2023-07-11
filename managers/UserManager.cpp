@@ -442,7 +442,7 @@ DBUser* UserManager::GetUser(int id)
     PGconn* pConn = GetPQConnection();
 
     PGresult* res = PQexec(pConn, sql.c_str());
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0)
 	{
         char* err = PQerrorMessage(pConn);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));

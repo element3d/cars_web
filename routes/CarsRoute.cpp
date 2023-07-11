@@ -478,7 +478,21 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
             CarManager::Get()->SetCarAvatar(atoi(carId.c_str()), id);
 
        //  res.set_header("Access-Control-Allow-Origin", "*");
-        res.set_content(std::to_string(id).c_str(), "text/plain");
+        rapidjson::Document d;
+        d.SetObject();
+        rapidjson::Value v;
+        v.SetInt(id);
+        d.AddMember("id", v, d.GetAllocator());
+        v.SetString(filename.c_str(), filename.size(), d.GetAllocator());
+        d.AddMember("uri", v, d.GetAllocator());
+
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        d.Accept(writer);
+
+        std::string jsonStr = buffer.GetString();
+
+        res.set_content(jsonStr, "application/json");
 		res.status = 200;
 	};
 }
