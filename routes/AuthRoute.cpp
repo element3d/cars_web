@@ -41,7 +41,7 @@ int sign_in(const std::string& username, const std::string& password, std::strin
 bool verify_phone_number(const std::string& phone) 
 {
   std::string account_sid = "AC1d8b8057883ba3e52709ada81d688318";
-    std::string auth_token = "523c327ce9853607405e5147da5cc41f";
+    std::string auth_token = "c618478f57179ceb1142350466549a3d";
     std::string service_sid = "VA86f2076b23370a9e3436e042643b3ac6";
     std::string to_number = phone;
 
@@ -75,7 +75,7 @@ bool verify_phone_number(const std::string& phone)
 bool verify_twilio_code(const std::string& phone, const std::string& code) 
 {
     std::string account_sid = "AC1d8b8057883ba3e52709ada81d688318";
-    std::string auth_token = "523c327ce9853607405e5147da5cc41f";
+    std::string auth_token = "c618478f57179ceb1142350466549a3d";
     std::string service_sid = "VA86f2076b23370a9e3436e042643b3ac6";
     std::string to_number = phone;
     std::string verification_code = code;
@@ -117,8 +117,81 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
         document.Parse(req.body.c_str());
 
         std::string phone = document["phone"].GetString();
+        DBUser* pUser = UserManager::Get()->GetUser(phone);
+        if (pUser)
+        {
+            delete pUser;
+            res.status = 403;
+            res.set_content("", "text/plain");
+            return;
+        }
 
-        bool success = verify_phone_number(phone);
+        bool success = verify_phone_number(std::string("+374") + phone);
+        if (success)
+          res.status = 200;
+        else
+          res.status = 400;
+        res.set_content("", "text/plain");
+    };
+}
+
+std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::ChangePassword()
+{
+    return [](const httplib::Request& req, httplib::Response& res){
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "*");
+        res.set_header("Access-Control-Allow-Headers", "*");
+        std::cout << req.body;
+
+        rapidjson::Document document;
+        document.Parse(req.body.c_str());
+
+        std::string phone = document["phone"].GetString();
+        std::string password = document["password"].GetString();
+        std::string code = document["code"].GetString();
+        DBUser* pUser = UserManager::Get()->GetUser(phone);
+        if (!pUser)
+        {
+            res.status = 404;
+            res.set_content("", "text/plain");
+            return;
+        }
+
+        bool success = verify_twilio_code(std::string("+374") + phone, code);
+        if (success) 
+        {
+          if (UserManager::Get()->ChangePassword(phone, password))
+            res.status = 200;
+          else 
+            res.status = 400;
+        }
+        else
+          res.status = 400;
+        res.set_content("", "text/plain");
+    };
+}
+
+std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::SignInForgot()
+{
+    return [](const httplib::Request& req, httplib::Response& res){
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "*");
+        res.set_header("Access-Control-Allow-Headers", "*");
+        std::cout << req.body;
+
+        rapidjson::Document document;
+        document.Parse(req.body.c_str());
+
+        std::string phone = document["phone"].GetString();
+        DBUser* pUser = UserManager::Get()->GetUser(phone);
+        if (!pUser)
+        {
+            res.status = 404;
+            res.set_content("", "text/plain");
+            return;
+        }
+
+        bool success = verify_phone_number(std::string("+374") + phone);
         if (success)
           res.status = 200;
         else
@@ -141,16 +214,25 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
         std::string username = document["username"].GetString();
         std::string phone = document["phone"].GetString();
         std::string pwd = document["password"].GetString();
-		int type = document["type"].GetInt();
-		std::string firstName = document["first_name"].GetString();
-		std::string code = document["code"].GetString();
+
+        DBUser* pUser = UserManager::Get()->GetUser(phone);
+        if (pUser)
+        {
+            delete pUser;
+            res.status = 403;
+            res.set_content("", "text/plain");
+            return;
+        }
+
+		  int type = document["type"].GetInt();
+		  std::string firstName = document["first_name"].GetString();
+		  std::string code = document["code"].GetString();
 
         bool ret = verify_twilio_code(std::string("+374") + phone, code);
         if (!ret) 
         {
            res.status = 400;
            res.set_content("", "text/plain");
-           return;
         }
         int userId = UserManager::Get()->CreateUser(username, phone, pwd, type, firstName, "");
 

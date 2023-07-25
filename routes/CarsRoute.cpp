@@ -600,6 +600,9 @@ void CarsRoute::_ParseFilter(const httplib::Request& req, CarFilter& filter)
     int onSale = 1;
     if (req.has_param("on_sale")) onSale = atoi(req.get_param_value("on_sale", 0).c_str());
 
+    int limit = 4;
+    if (req.has_param("limit")) limit = atoi(req.get_param_value("limit", 0).c_str());
+
     filter.Province = province;
     filter.Page = page;
     filter.Make = make;
@@ -622,6 +625,7 @@ void CarsRoute::_ParseFilter(const httplib::Request& req, CarFilter& filter)
     filter.Color = color;
     filter.View = view;
     filter.OnSale = onSale;
+    filter.Limit = limit;
 }
 
 void CarsRoute::ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::string& json)

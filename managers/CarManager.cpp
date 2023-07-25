@@ -47,6 +47,14 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
 
     using namespace std::chrono;
     uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+
+    auto now = std::chrono::system_clock::now();
+
+    // Convert the timepoint to milliseconds since January 1, 1970 (Unix Epoch)
+    auto duration = now.time_since_epoch();
+    uint64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+
     uint64_t onTopTs = ms;
 
     int onTop = d["on_top"].GetInt();
@@ -539,7 +547,7 @@ void CarManager::GetCars(const CarFilter& filter, int page, std::vector<DBCar*>&
     {
         sql += " AND on_sale=" + std::to_string(filter.OnSale);
     }
-    sql += " order by refresh_ts desc limit 4 offset " + std::to_string(4 * std::max((page - 1), 0)) + ";";
+    sql += " order by refresh_ts desc limit " +  std::to_string(filter.Limit) + " offset " + std::to_string(filter.Limit * std::max((page - 1), 0)) + ";";
 
     /*if (filter.Make == -1)
 	{
@@ -880,7 +888,7 @@ bool CarManager::_ParseGPResult(PGresult* res, std::vector<DBCar*>& cars)
         pCar->AvatarImageId = atoi(temp);
 
         strcpy(temp, PQgetvalue(res, i, 27));
-        pCar->RefreshTs = atol(temp);
+        pCar->RefreshTs = std::strtoull(temp, nullptr, 10);
 
 		{
             std::string sql = "SELECT image_path, id FROM car_images WHERE car_id = "

@@ -304,6 +304,25 @@ DBGift* UserManager::GetUserGift(int id)
     return pGift;
 }
 
+bool UserManager::ChangePassword(const std::string& phone, const std::string& password)
+{
+   std::string sql = "UPDATE USERS SET password = '"
+            + password + "' WHERE username = '" + phone + "';";
+
+    PGconn* pg = GetPQConnection();
+
+    PGresult* res = PQexec(pg, sql.c_str());
+	  if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	  {
+      char* err = PQerrorMessage(pg);
+      fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+		  PQclear(res);
+      PQfinish(pg);
+		  //exit_nicely(conn);
+		  return nullptr;
+	  }
+}
+
 DBUser* UserManager::GetUser(const std::string& username)
 {
     std::string sql = "SELECT * FROM users WHERE username = '"

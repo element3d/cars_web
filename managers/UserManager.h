@@ -91,6 +91,7 @@ public:
     DBUser* GetUser(int id);
     bool EditUser(int id, const std::string& firstName, const std::string& secondName, const std::string& phone);
     DBUser* GetUser(const std::string& username);
+    bool ChangePassword(const std::string& phone, const std::string& password);
     int GetUserNumGolds(int id);
     void UserSetAutoPartMakes(int id, const std::vector<std::string>& makes);
     void UserSetAutoPartCategories(int id, const std::vector<int>& categories);

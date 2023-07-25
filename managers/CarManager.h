@@ -48,7 +48,7 @@ struct DBCar
     std::vector<DBCarImage> Images;
 	bool OnSale;
     int OnTop;
-    long RefreshTs;
+    uint64_t  RefreshTs;
 };
 
 struct CarFilter
@@ -76,6 +76,7 @@ struct CarFilter
     int Page;
     int View;
     int OnSale;
+    int Limit;
 	/*int Country;
 	int Province;
 	int SubProvince;
