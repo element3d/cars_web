@@ -387,8 +387,10 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 		std::string carId = req.get_param_value("car_id", 0).c_str();
 		httplib::MultipartFormData image_file = req.get_file_value("image_file");
 		
-		if (!stlplus::folder_exists("data")) stlplus::folder_create("data");
-		std::string carsDir = "data/cars";
+    std::string dataDir = "data";
+    // std::string dataDir = "/var/www/data";
+		if (!stlplus::folder_exists(dataDir)) stlplus::folder_create(dataDir);
+		std::string carsDir = dataDir + "/cars";
 		if (!stlplus::folder_exists(carsDir)) stlplus::folder_create(carsDir);
 		std::string userDir = carsDir + "/" + userId;
 		if (!stlplus::folder_exists(userDir)) stlplus::folder_create(userDir);
@@ -450,10 +452,12 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 
 		std::string carId = req.get_param_value("car_id", 0).c_str();
 		httplib::MultipartFormData image_file = req.get_file_value("image_file");
-        httplib::MultipartFormData isAvatar = req.get_file_value("is_avatar");
+    httplib::MultipartFormData isAvatar = req.get_file_value("is_avatar");
 
-		if (!stlplus::folder_exists("data")) stlplus::folder_create("data");
-		std::string carsDir = "data/cars";
+    std::string dataDir = "data";
+    // std::string dataDir = "/var/www/data";
+		if (!stlplus::folder_exists(dataDir)) stlplus::folder_create(dataDir);
+		std::string carsDir = dataDir + "/cars";
 		if (!stlplus::folder_exists(carsDir)) stlplus::folder_create(carsDir);
         std::string userDir = carsDir + "/" + std::to_string(userId);
 		if (!stlplus::folder_exists(userDir)) stlplus::folder_create(userDir);
