@@ -33,6 +33,11 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
         int userId = decoded.get_payload_claim("id").as_int();
 
         DBUser* pUser = UserManager::Get()->GetUser(userId);
+        if (!pUser) 
+        {
+          res.status = 404;
+          return;
+        }
         //for(auto& e : decoded.get_payload_claims())
           //  std::cout << e.first << " = " << e.second << std::endl;
 

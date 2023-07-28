@@ -224,9 +224,9 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
             return;
         }
 
-		  int type = document["type"].GetInt();
-		  std::string firstName = document["first_name"].GetString();
-		  std::string code = document["code"].GetString();
+		    int type = document["type"].GetInt();
+		    std::string firstName = document["first_name"].GetString();
+		    std::string code = document["code"].GetString();
 
         bool ret = verify_twilio_code(std::string("+374") + phone, code);
         if (!ret) 
@@ -236,8 +236,16 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
         }
         int userId = UserManager::Get()->CreateUser(username, phone, pwd, type, firstName, "");
 
+        std::string token;
+        int status = sign_in(username, pwd, token);
+		    if (!token.size())
+		    {
+          res.status = status;
+			    return;
+		    }
+
         res.status = 200;
-        res.set_content(std::to_string(userId), "text/plain");
+        res.set_content(token, "text/plain");
     };
 }
 
