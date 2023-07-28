@@ -1005,9 +1005,17 @@ bool CarManager::DeleteCarImage(int carId, int imageId)
 
 int CarManager::AddCarImage(int carId, const std::string& imagePath)
 {
+
+	std::string prefix = "/var/www/";
+	size_t pos = imagePath.find(prefix);
+	std::string url = imagePath;
+        if (pos != std::string::npos) 
+	{
+	    url = url.substr(pos + prefix.length());
+	}
 	std::string sql = "INSERT INTO car_images(car_id, image_path) VALUES ("
 		+ std::to_string(carId) + ", '"
-		+ imagePath + "'"
+		+ url + "'"
 		+ ");";
 
     PGconn* pConn = GetPQConnection();

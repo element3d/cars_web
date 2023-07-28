@@ -331,10 +331,12 @@ void Upload(void * data, int size, std::string fullPath, std::string filename, E
     if (contentType == EImageContentType::Webp)
     {
       c = 3;
+      printf("decoding webp ... \n");
       d = WebPDecodeRGB((const uint8_t*)data, size, &w, &h);
     }
     else
       d = stbi_load_from_memory((unsigned char*)data, size, &w, &h, &c, 0);
+      printf("decoding webp finished... \n");
 
     int nw = 400;
     int nh = int(400.f * h / w);
@@ -387,8 +389,8 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 		std::string carId = req.get_param_value("car_id", 0).c_str();
 		httplib::MultipartFormData image_file = req.get_file_value("image_file");
 		
-    std::string dataDir = "data";
-    // std::string dataDir = "/var/www/data";
+//    std::string dataDir = "data";
+     std::string dataDir = "/var/www/data";
 		if (!stlplus::folder_exists(dataDir)) stlplus::folder_create(dataDir);
 		std::string carsDir = dataDir + "/cars";
 		if (!stlplus::folder_exists(carsDir)) stlplus::folder_create(carsDir);
@@ -454,8 +456,8 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 		httplib::MultipartFormData image_file = req.get_file_value("image_file");
     httplib::MultipartFormData isAvatar = req.get_file_value("is_avatar");
 
-    std::string dataDir = "data";
-    // std::string dataDir = "/var/www/data";
+//    std::string dataDir = "data";
+     std::string dataDir = "/var/www/data";
 		if (!stlplus::folder_exists(dataDir)) stlplus::folder_create(dataDir);
 		std::string carsDir = dataDir + "/cars";
 		if (!stlplus::folder_exists(carsDir)) stlplus::folder_create(carsDir);
@@ -487,7 +489,9 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
         rapidjson::Value v;
         v.SetInt(id);
         d.AddMember("id", v, d.GetAllocator());
-        v.SetString(filename.c_str(), filename.size(), d.GetAllocator());
+	std::string url = "data/cars/";
+	url += rn + ".jpg";
+        v.SetString(url.c_str(), url.size(), d.GetAllocator());
         d.AddMember("uri", v, d.GetAllocator());
 
         rapidjson::StringBuffer buffer;

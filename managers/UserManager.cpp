@@ -319,7 +319,7 @@ bool UserManager::ChangePassword(const std::string& phone, const std::string& pa
 		  PQclear(res);
       PQfinish(pg);
 		  //exit_nicely(conn);
-		  return nullptr;
+		  return false;
 	  }
 }
 
