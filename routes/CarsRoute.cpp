@@ -321,10 +321,21 @@ enum class EImageContentType
   Webp
 };
 
+#include <webp/encode.h> // Include the WebP library headers for encoding
+
+void WebPSave(unsigned char* pData, int w, int h, const std::string& path) 
+{
+    unsigned char* pOutSmallWebp = nullptr;
+    size_t original_webp_size = WebPEncodeRGB(pData, w, h, w * 3, 100, &pOutSmallWebp);
+    // Save the original WebP data to a file
+    FILE* webp_file = fopen(path.c_str(), "wb");
+    fwrite(pOutSmallWebp, 1, original_webp_size, webp_file);
+    fclose(webp_file);
+    free(pOutSmallWebp);
+}
+
 void Upload(void * data, int size, std::string fullPath, std::string filename, EImageContentType contentType) 
 {
-
-
     int w, h, c;
     unsigned char* d = nullptr;
 
@@ -344,13 +355,16 @@ void Upload(void * data, int size, std::string fullPath, std::string filename, E
     avir :: CImageResizer<> ImageResizer( 8 );
     ImageResizer.resizeImage( d, w, h, 0, dd, nw, nh, c, 0 );
 
+    WebPSave(dd, nw, nh, stlplus::folder_part(fullPath) + "/" + filename + ".webp");
+
     int aw = std::min(w, 2000);
     int ah = int(aw * h / w);
     unsigned char* ad = new unsigned char[aw* ah * c];
     ImageResizer.resizeImage( d, w, h, 0, ad, aw, ah, c, 0 );
+    WebPSave(ad, aw, ah, stlplus::folder_part(fullPath) + "/" + filename + "_orig.webp");
 
-    stbi_write_jpg(std::string(stlplus::folder_part(fullPath) + "/" + filename + "_orig.jpg").c_str(), aw, ah, c, ad, 100);
-    stbi_write_jpg(fullPath.c_str(), nw, nh, c, dd, 100);
+    // stbi_write_jpg(std::string(stlplus::folder_part(fullPath) + "/" + filename + "_orig.jpg").c_str(), aw, ah, c, ad, 100);
+    // stbi_write_jpg(fullPath.c_str(), nw, nh, c, dd, 100);
     stbi_image_free(d);
     delete[] dd;
     delete[] ad;
@@ -389,8 +403,8 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 		std::string carId = req.get_param_value("car_id", 0).c_str();
 		httplib::MultipartFormData image_file = req.get_file_value("image_file");
 		
-//    std::string dataDir = "data";
-     std::string dataDir = "/var/www/data";
+    std::string dataDir = "data";
+  //   std::string dataDir = "/var/www/data";
 		if (!stlplus::folder_exists(dataDir)) stlplus::folder_create(dataDir);
 		std::string carsDir = dataDir + "/cars";
 		if (!stlplus::folder_exists(carsDir)) stlplus::folder_create(carsDir);
@@ -398,7 +412,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 		if (!stlplus::folder_exists(userDir)) stlplus::folder_create(userDir);
 		std::string carDir = userDir + "/" + carId;
 		if (!stlplus::folder_exists(carDir)) stlplus::folder_create(carDir);
-		std::string filename = carDir + "/avatar.jpg";
+		std::string filename = carDir + "/avatar.webp";
 //		std::ofstream ofs(filename, std::ios::binary);
 //		ofs << image_file.content;
 
@@ -456,8 +470,8 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 		httplib::MultipartFormData image_file = req.get_file_value("image_file");
     httplib::MultipartFormData isAvatar = req.get_file_value("is_avatar");
 
-//    std::string dataDir = "data";
-     std::string dataDir = "/var/www/data";
+    std::string dataDir = "data";
+//     std::string dataDir = "/var/www/data";
 		if (!stlplus::folder_exists(dataDir)) stlplus::folder_create(dataDir);
 		std::string carsDir = dataDir + "/cars";
 		if (!stlplus::folder_exists(carsDir)) stlplus::folder_create(carsDir);
@@ -466,7 +480,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 		std::string carDir = userDir + "/"  + carId;
 		if (!stlplus::folder_exists(carDir)) stlplus::folder_create(carDir);
         std::string rn = random_string(10);
-        std::string filename = carDir + "/" + rn + ".jpg";
+        std::string filename = carDir + "/" + rn + ".webp";
 //		std::ofstream ofs(filename, std::ios::binary);
 //		ofs << image_file.content;
 
@@ -490,7 +504,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
         v.SetInt(id);
         d.AddMember("id", v, d.GetAllocator());
 	std::string url = "data/cars/";
-	url += rn + ".jpg";
+	url += rn + ".webp";
         v.SetString(url.c_str(), url.size(), d.GetAllocator());
         d.AddMember("uri", v, d.GetAllocator());
 

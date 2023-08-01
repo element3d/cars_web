@@ -438,7 +438,7 @@ bool UserManager::EditUser(int id, const std::string& firstName, const std::stri
 
     PGconn* pg = GetPQConnection();
     PGresult* res = PQexec(pg, sql.c_str());
-    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
