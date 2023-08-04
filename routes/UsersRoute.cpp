@@ -6,6 +6,7 @@
 #include <jwt-cpp/jwt.h>
 #include "../managers/UserManager.h"
 #include "../stlplus/file_system.hpp"
+#include "ImageUtils.h"
 
 UsersRoute* UsersRoute::sInstance = nullptr;
 
@@ -52,10 +53,18 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
 #include "../anvir/avir.h"
 #include "../stb_image/stb_image_write.h"
 #include "../stb_image/stb_image.h"
+#include <webp/decode.h>
 
-void Upload(void * data, int size, std::string fullPath) {
+void Upload(void * data, int size, std::string fullPath, EImageContentType contentType) {
     int w, h, c;
-    unsigned char* d = stbi_load_from_memory((unsigned char*)data, size, &w, &h, &c, 0);
+    unsigned char* d = nullptr;
+    if (contentType == EImageContentType::Webp)
+    {
+      c = 3;
+      d = WebPDecodeRGB((const uint8_t*)data, size, &w, &h);
+    }
+    else
+      d = stbi_load_from_memory((unsigned char*)data, size, &w, &h, &c, 0);
 
     int nw = 400;
     int nh = int(400.f * h / w);
@@ -63,7 +72,9 @@ void Upload(void * data, int size, std::string fullPath) {
     avir :: CImageResizer<> ImageResizer( 8 );
     ImageResizer.resizeImage( d, w, h, 0, dd, nw, nh, c, 0 );
 
-    stbi_write_jpg(fullPath.c_str(), nw, nh, c, dd, 100);
+    WebPSave(dd, nw, nh, fullPath);
+
+    // stbi_write_jpg(fullPath.c_str(), nw, nh, c, dd, 100);
     stbi_image_free(d);
     delete[] dd;
 
@@ -101,7 +112,9 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
 //        std::ofstream ofs(filename, std::ios::binary);
 //        ofs << image_file.content;
 
-        Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename);
+        EImageContentType ct = EImageContentType::Jpeg;
+        if (image_file.content_type == std::string("image/webp")) ct = EImageContentType::Webp;
+        Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, ct);
 
         UserManager::Get()->SetUserAvatar(atoi(userId.c_str()), filename);
         res.status = 200;
@@ -117,7 +130,8 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
 //            return;
 //        }
 
-
+       res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+     res.set_header("Access-Control-Allow-Origin", "*");
 //        std::string userId = (req.get_param_value("user_id", 0).c_str());
         std::string token = req.get_header_value("Authentication");
         std::cout << "ME: token: " << token << std::endl;
@@ -137,11 +151,13 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
         if (!stlplus::folder_exists(userDir)) stlplus::folder_create(userDir);
 //        std::string carDir = userDir + "/" + carId;
 //        if (!stlplus::folder_exists(carDir)) stlplus::folder_create(carDir);
-        std::string filename = userDir + "/avatar.jpg";
+        std::string filename = userDir + "/avatar.webp";
 //        std::ofstream ofs(filename, std::ios::binary);
 //        ofs << image_file.content;
 
-        Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename);
+        EImageContentType ct = EImageContentType::Jpeg;
+        if (image_file.content_type == std::string("image/webp")) ct = EImageContentType::Webp;
+        Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, ct);
 
         UserManager::Get()->SetUserAvatar(atoi(userId.c_str()), filename);
         res.status = 200;

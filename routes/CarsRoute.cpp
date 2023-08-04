@@ -314,25 +314,10 @@ std::string  gen_random(int len) {
 #include "../anvir/avir.h"
 #include "../libwebp/src/webp/decode.h"
 
-enum class EImageContentType 
-{
-  Jpeg,
-  Png,
-  Webp
-};
+#include "ImageUtils.h"
 
-#include <webp/encode.h> // Include the WebP library headers for encoding
+#include <webp/encode.h> 
 
-void WebPSave(unsigned char* pData, int w, int h, const std::string& path) 
-{
-    unsigned char* pOutSmallWebp = nullptr;
-    size_t original_webp_size = WebPEncodeRGB(pData, w, h, w * 3, 100, &pOutSmallWebp);
-    // Save the original WebP data to a file
-    FILE* webp_file = fopen(path.c_str(), "wb");
-    fwrite(pOutSmallWebp, 1, original_webp_size, webp_file);
-    fclose(webp_file);
-    free(pOutSmallWebp);
-}
 
 void Upload(void * data, int size, std::string fullPath, std::string filename, EImageContentType contentType) 
 {
