@@ -116,7 +116,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
         if (image_file.content_type == std::string("image/webp")) ct = EImageContentType::Webp;
         Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, ct);
 
-        UserManager::Get()->SetUserAvatar(atoi(userId.c_str()), std::string("data/users/") + carsDir + "/" + userId + "/avatar.webp");
+        UserManager::Get()->SetUserAvatar(atoi(userId.c_str()), std::string("data/users/") + userId + "/avatar.webp");
         res.status = 200;
     };
 }
@@ -159,7 +159,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
         if (image_file.content_type == std::string("image/webp")) ct = EImageContentType::Webp;
         Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, ct);
 
-        UserManager::Get()->SetUserAvatar(atoi(userId.c_str()), std::string("data/users/") + carsDir + "/" + userId + "/avatar.webp");
+        UserManager::Get()->SetUserAvatar(atoi(userId.c_str()), std::string("data/users/") + userId + "/avatar.webp");
         res.status = 200;
     };
 }
