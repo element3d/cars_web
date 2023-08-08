@@ -23,6 +23,7 @@ public:
     std::function<void(const httplib::Request &, httplib::Response &)> CarsDeleteImage();
     std::function<void(const httplib::Request &, httplib::Response &)> CarsUpdateStars();
     std::function<void(const httplib::Request &, httplib::Response &)> CarsGetStars();
+    std::function<void(const httplib::Request &, httplib::Response &)> CarsGetUserVoteStars();
     std::function<void(const httplib::Request &, httplib::Response &)> CarsRefresh();
 
     void _ParseFilter(const httplib::Request& req, CarFilter& filter);

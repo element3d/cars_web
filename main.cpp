@@ -487,6 +487,7 @@ int main(void)
     svr.Delete("/api/v1/cars/image", CarsRoute::Get()->CarsDeleteImage());
     svr.Put("/api/v1/cars/stars", CarsRoute::Get()->CarsUpdateStars());
     svr.Get("/api/v1/cars/stars", CarsRoute::Get()->CarsGetStars());
+    svr.Get("/api/v1/cars/user_stars", CarsRoute::Get()->CarsGetUserVoteStars());
     svr.Get("/api/v1/cars/refresh", CarsRoute::Get()->CarsRefresh());
 
 	svr.Get("/api/v1/my_auto_parts", AutoPartsRoute::Get()->MyAutoParts());

@@ -327,15 +327,16 @@ DBUser* UserManager::GetUser(const std::string& username)
 {
     std::string sql = "SELECT * FROM users WHERE username = '"
             + username + "';";
-   PGconn* pg = GetPQConnection();
+   PGconn* pg = ConnectionPool::Get()->getConnection(); //GetPQConnection();
 
     PGresult* res = PQexec(pg, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
-		PQclear(res);
-         PQfinish(pg);
+		    PQclear(res);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
 		//exit_nicely(conn);
 		return nullptr;
 	}
@@ -427,7 +428,8 @@ DBUser* UserManager::GetUser(const std::string& username)
     pUser->Phone = phone;
     pUser->Password = pwd;*/
 	free(temp);
-    PQfinish(pg);
+    //PQfinish(pg);
+   ConnectionPool::Get()->releaseConnection(pg);
     return pUser;
 }
 
@@ -458,7 +460,7 @@ DBUser* UserManager::GetUser(int id)
     std::string sql = "SELECT * FROM users WHERE id = "
             + std::to_string(id) + ";";
 
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();//GetPQConnection();
 
     PGresult* res = PQexec(pConn, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0)
@@ -466,7 +468,8 @@ DBUser* UserManager::GetUser(int id)
         char* err = PQerrorMessage(pConn);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
 		PQclear(res);
-        CloseConnection(pConn);
+       // CloseConnection(pConn);
+       ConnectionPool::Get()->releaseConnection(pConn);
 		//exit_nicely(conn);
 		return nullptr;
 	}
@@ -532,7 +535,8 @@ DBUser* UserManager::GetUser(int id)
     DBUser* pUser = new DBUser();
     pUser->Id = id;
     pUser->Phone = ph;*/
-    CloseConnection(pConn);
+    //CloseConnection(pConn);
+  ConnectionPool::Get()->releaseConnection(pConn);
 	free(temp);
     return pUser;
 }

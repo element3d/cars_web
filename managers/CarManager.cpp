@@ -430,7 +430,9 @@ DBCar* CarManager::GetCar(int carId)
 {
     std::string sql;
     sql = std::string("SELECT * FROM cars WHERE id = " + std::to_string(carId));
-    PGconn* pg = GetPQConnection();
+    //PGconn* pg = GetPQConnection();
+    ConnectionPool* pPool = ConnectionPool::Get();
+    PGconn* pg = pPool->getConnection();
 
 
     PGresult* res = PQexec(pg, sql.c_str());
@@ -439,11 +441,13 @@ DBCar* CarManager::GetCar(int carId)
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        pPool->releaseConnection(pg);
+        //PQfinish(pg);
         //exit_nicely(conn);
         return nullptr;
     }
-    PQfinish(pg);
+    //PQfinish(pg);
+     pPool->releaseConnection(pg);
     std::vector<DBCar*> cars;
     _ParseGPResult(res, cars);
     if (!cars.size()) return nullptr;
@@ -567,20 +571,23 @@ void CarManager::GetCars(const CarFilter& filter, int page, std::vector<DBCar*>&
     }*/
    // sql = std::string("SELECT * FROM cars limit 20 ") + "offset " + std::to_string(20 * (page - 1)) + ";";
 
-    PGconn* pg = GetPQConnection();
-
+    // PGconn* pg = GetPQConnection();
+    ConnectionPool* pPool = ConnectionPool::Get();
+    PGconn* pg = pPool->getConnection();
 
     PGresult* res = PQexec(pg, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
-		PQclear(res);
-        PQfinish(pg);
+		    PQclear(res);
+        pPool->releaseConnection(pg);
+        //PQfinish(pg);
 		//exit_nicely(conn);
 		return;
 	}
-    PQfinish(pg);
+    //PQfinish(pg);
+  pPool->releaseConnection(pg);
 
 	_ParseGPResult(res, cars);
 }
@@ -796,9 +803,10 @@ void CarManager::GetCars(int userId, std::vector<DBCar*>& cars)
 
 bool CarManager::_ParseGPResult(PGresult* res, std::vector<DBCar*>& cars)
 {
-	char* temp = (char*)calloc(256, sizeof(char));
+	char* temp = (char*)calloc(4096, sizeof(char));
 
-    PGconn* pConn = GetPQConnection();
+  ConnectionPool* pPool = ConnectionPool::Get();
+  PGconn* pConn = pPool->getConnection();
 	int rec_count = PQntuples(res);
 	for (int i = 0; i < rec_count; i++)
 	{
@@ -810,13 +818,13 @@ bool CarManager::_ParseGPResult(PGresult* res, std::vector<DBCar*>& cars)
 		pCar->UserId = atoi(temp);
 
 		strcpy(temp, PQgetvalue(res, i, 2));
-        pCar->Make = temp;
+    pCar->Make = temp;
 
 		strcpy(temp, PQgetvalue(res, i, 3));
-        pCar->Class = temp;
+    pCar->Class = temp;
 
 		strcpy(temp, PQgetvalue(res, i, 4));
-        pCar->Model = temp;
+    pCar->Model = temp;
 
 		strcpy(temp, PQgetvalue(res, i, 5));
 		pCar->Submodel = temp;
@@ -866,65 +874,67 @@ bool CarManager::_ParseGPResult(PGresult* res, std::vector<DBCar*>& cars)
 		strcpy(temp, PQgetvalue(res, i, 20));
 		pCar->Color = atoi(temp);
 
-        /*strcpy(temp, PQgetvalue(res, i, 21));
-        pCar->Avatar = (temp);*/
+    /*strcpy(temp, PQgetvalue(res, i, 21));
+    pCar->Avatar = (temp);*/
 
-        strcpy(temp, PQgetvalue(res, i, 21));
+    strcpy(temp, PQgetvalue(res, i, 21));
 		pCar->OnSale = atoi(temp);
 
-        strcpy(temp, PQgetvalue(res, i, 22));
+    strcpy(temp, PQgetvalue(res, i, 22));
 		pCar->OnTop = atoi(temp);
 
-        // strcpy(temp, PQgetvalue(res, i, 23));
-        // pCar->Avatar = (temp);
+    // strcpy(temp, PQgetvalue(res, i, 23));
+    // pCar->Avatar = (temp);
 
-        strcpy(temp, PQgetvalue(res, i, 24));
-        pCar->Mileage = atoi(temp);
+    strcpy(temp, PQgetvalue(res, i, 24));
+    pCar->Mileage = atoi(temp);
 
-        strcpy(temp, PQgetvalue(res, i, 25));
-        pCar->Description = temp;
+    strcpy(temp, PQgetvalue(res, i, 25));
+    pCar->Description = temp;
 
-        strcpy(temp, PQgetvalue(res, i, 26));
-        pCar->AvatarImageId = atoi(temp);
+    strcpy(temp, PQgetvalue(res, i, 26));
+    pCar->AvatarImageId = atoi(temp);
 
-        strcpy(temp, PQgetvalue(res, i, 27));
-        pCar->RefreshTs = std::strtoull(temp, nullptr, 10);
+    strcpy(temp, PQgetvalue(res, i, 27));
+    pCar->RefreshTs = std::strtoull(temp, nullptr, 10);
+
+    pCar->Rank = GetCarStars(pCar->Id);
 
 		{
-            std::string sql = "SELECT image_path, id FROM car_images WHERE car_id = "
-				+ std::to_string(pCar->Id) + ";";
+        std::string sql = "SELECT image_path, id FROM car_images WHERE car_id = " + std::to_string(pCar->Id) + ";";
 
-            PGresult* res = PQexec(pConn, sql.c_str());
-			if (PQresultStatus(res) != PGRES_TUPLES_OK)
-			{
-                char* err = PQerrorMessage(pConn);
-                fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
-				PQclear(res);
-				//exit_nicely(conn);
-			}
-			else
-			{
-                int imageCount = PQntuples(res);
-				char* tmp = (char*)calloc(256, sizeof(char));
-				for (int img = 0; img < imageCount; img++)
-				{
-                    DBCarImage im;
-                    strcpy(tmp, PQgetvalue(res, img, 0));
-                    im.ImagePath = tmp;
-                    strcpy(tmp, PQgetvalue(res, img, 1));
-                    im.Id = atoi(tmp);
-                    pCar->Images.push_back(im);
-				}
-				free(tmp);
-			}
-			PQclear(res);
+        PGresult* res = PQexec(pConn, sql.c_str());
+			  if (PQresultStatus(res) != PGRES_TUPLES_OK)
+			  {
+            char* err = PQerrorMessage(pConn);
+            fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
+				    PQclear(res);
+  				  //exit_nicely(conn);
+			  }
+			  else
+			  {
+          int imageCount = PQntuples(res);
+				  char* tmp = (char*)calloc(256, sizeof(char));
+				  for (int img = 0; img < imageCount; img++)
+				  {
+            DBCarImage im;
+            strcpy(tmp, PQgetvalue(res, img, 0));
+            im.ImagePath = tmp;
+            strcpy(tmp, PQgetvalue(res, img, 1));
+            im.Id = atoi(tmp);
+            pCar->Images.push_back(im);
+				  }
+				  free(tmp);
+			  }
+			  PQclear(res);
 		}
-
-        cars.push_back(pCar);
+    cars.push_back(pCar);
 	}
+
 	free(temp);
-	PQclear(res);
-    CloseConnection(pConn);
+	// PQclear(res);
+  //CloseConnection(pConn);
+  pPool->releaseConnection(pConn);
 	return true;
 }
 
@@ -1046,6 +1056,33 @@ int CarManager::AddCarImage(int carId, const std::string& imagePath)
     return id;
 }
 
+int CarManager::GetCarUserVoteStars(int carId, int userId)
+{
+    PGconn* mPG = GetPQConnection();
+    std::string sql = "SELECT num_stars FROM car_stars WHERE car_id = " + std::to_string(carId) + " AND user_id=" + std::to_string(userId) +  ";";
+    PGresult* res = PQexec(mPG, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        char* err = PQerrorMessage(mPG);
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(mPG));
+        PQclear(res);
+        CloseConnection(mPG);
+        return 0;
+        //exit_nicely(conn);
+    }
+    int selectCount = PQntuples(res);
+    if (!selectCount) return 0;
+
+    int sumStars = 0;
+    char* tmp = (char*)calloc(256, sizeof(char));
+    strcpy(tmp, PQgetvalue(res, 0, 0));
+    sumStars = atoi(tmp);
+    free(tmp);
+    CloseConnection(mPG);
+    PQclear(res);
+    return sumStars;
+}
+
 int CarManager::GetCarStars(int carId)
 {
     PGconn* mPG = GetPQConnection();
@@ -1075,7 +1112,7 @@ int CarManager::GetCarStars(int carId)
     free(tmp);
 
     PQclear(res);
-    return sumStars / imageCount;
+    return sumStars;
 }
 
 void CarManager::Refresh(int carId)

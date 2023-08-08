@@ -49,6 +49,7 @@ struct DBCar
 	bool OnSale;
     int OnTop;
     uint64_t  RefreshTs;
+    int Rank;
 };
 
 struct CarFilter
@@ -124,6 +125,7 @@ public:
     bool DeleteCarImage(int carId, int imageId);
     bool UpdateCarStars(int userId, int carId, int numStars);
     int GetCarStars(int carId);
+    int GetCarUserVoteStars(int carId, int userId);
     void Refresh(int carId);
     void ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::string& json);
 private:

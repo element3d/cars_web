@@ -507,6 +507,8 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsUpdateStars()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {
+         res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+     res.set_header("Access-Control-Allow-Origin", "*");
         std::string token = req.get_header_value("Authentication");
 
         auto decoded = jwt::decode(token);
@@ -527,10 +529,34 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsGetStars()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {
+      res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+     res.set_header("Access-Control-Allow-Origin", "*");
 
         std::string carId = req.get_param_value("car_id", 0).c_str();
 
         int numStars = CarManager::Get()->GetCarStars(atoi(carId.c_str()));
+        //for(auto& e : decoded.get_payload_claims())
+        //  std::cout << e.first << " = " << e.second << std::endl;
+
+        res.status = 200;
+        res.set_content(std::to_string(numStars), "text/plain");
+    };
+}
+
+
+std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsGetUserVoteStars()
+{
+    return [this](const httplib::Request& req, httplib::Response& res) {
+      res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+     res.set_header("Access-Control-Allow-Origin", "*");
+
+        std::string carId = req.get_param_value("car_id", 0).c_str();
+        std::string token = req.get_header_value("Authentication");
+          auto decoded = jwt::decode(token);
+
+        int userId = decoded.get_payload_claim("id").as_int();
+
+        int numStars = CarManager::Get()->GetCarUserVoteStars(atoi(carId.c_str()), userId);
         //for(auto& e : decoded.get_payload_claims())
         //  std::cout << e.first << " = " << e.second << std::endl;
 
@@ -740,6 +766,9 @@ void CarsRoute::ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::st
 
         v.SetDouble(pCar->RefreshTs);
         o.AddMember("refresh_ts", v, d.GetAllocator());
+
+    v.SetInt(pCar->Rank);
+    o.AddMember("rank", v, d.GetAllocator());
 
 		v.SetArray();
 		for (auto& i : pCar->Images)
