@@ -340,7 +340,9 @@ bool UserManager::ChangePassword(const std::string& phone, const std::string& pa
 		  //exit_nicely(conn);
 		  return false;
 	  }
+    PQclear(res);
     ConnectionPool::Get()->releaseConnection(pg);
+    return true;
 }
 
 DBUser* UserManager::GetUser(const std::string& username)
