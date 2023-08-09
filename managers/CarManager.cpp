@@ -32,7 +32,8 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return -1;
     }
 
@@ -106,8 +107,9 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
 	{
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
-		PQclear(res);
-        PQfinish(pg);
+		  PQclear(res);
+        //PQfinish(pg);
+      ConnectionPool::Get()->releaseConnection(pg);
 		return -1;
 	}
 
@@ -118,7 +120,8 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
 		PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
 		return -1;
 	}
 
@@ -135,8 +138,9 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
         PQclear(res);
     }
 
-    PQfinish(pg);
-	return id;
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
+	  return id;
 }
 
 #include "../stlplus/file_system.hpp"
@@ -151,7 +155,8 @@ bool CarManager::DeleteCar(int userId, int id)
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         //exit_nicely(conn);
         return 0;
     }
@@ -164,8 +169,9 @@ bool CarManager::DeleteCar(int userId, int id)
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
         //exit_nicely(conn);
+        ConnectionPool::Get()->releaseConnection(pg);
         return 0;
     }
 
@@ -177,6 +183,7 @@ bool CarManager::DeleteCar(int userId, int id)
         stlplus::file_delete(dir + f);
     }
     stlplus::folder_delete(dir);
+    ConnectionPool::Get()->releaseConnection(pg);
     return true;
 }
 
@@ -195,8 +202,9 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
         //exit_nicely(conn);
+        ConnectionPool::Get()->releaseConnection(pg);
         return 0;
     }
 
@@ -239,7 +247,8 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
                         char* err = PQerrorMessage(pg);
                         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
                         PQclear(res);
-                        PQfinish(pg);
+                        //PQfinish(pg);
+                        ConnectionPool::Get()->releaseConnection(pg);
                         //exit_nicely(conn);
                         return 0;
                     }
@@ -317,7 +326,8 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return false;
     }
 
@@ -331,7 +341,8 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
         return -1;
     }*/
     PQclear(res);
-    PQfinish(pg);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
     /*char* temp = (char*)calloc(256, sizeof(char));
     int rec_count = PQntuples(res);
     strcpy(temp, PQgetvalue(res, 0, 0));
@@ -355,9 +366,11 @@ void CarManager::GetTopCarsBySerie(int serie, std::vector<DBCar*>& cars)
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pg);
         //exit_nicely(conn);
         return;
     }
+    ConnectionPool::Get()->releaseConnection(pg);
 
     _ParseGPResult(res, cars);
 }
@@ -376,14 +389,14 @@ void CarManager::GetTopCarsByMake(int make, std::vector<DBCar*>& cars)
     PGresult* res = PQexec(pConn, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
-		PQclear(res);
-        ConnectionPool::Get()->releaseConnection(pConn);
+      fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
+		  PQclear(res);
+      ConnectionPool::Get()->releaseConnection(pConn);
 		//exit_nicely(conn);
 		return;
 	}
 
-    ConnectionPool::Get()->releaseConnection(pConn);
+   ConnectionPool::Get()->releaseConnection(pConn);
 	_ParseGPResult(res, cars);
 }
 
@@ -413,11 +426,13 @@ int CarManager::GetTotalNumCars(const CarFilter& filter)
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         //exit_nicely(conn);
         return 0;
     }
-    PQfinish(pg);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
     char* temp = (char*)calloc(256, sizeof(char));
     strcpy(temp, PQgetvalue(res, 0, 0));
     int totalNumCars = atoi(temp);
@@ -608,6 +623,7 @@ void CarManager::GetNumCarsBySerie(const std::string& serie, std::vector<int>& o
             char* err = PQerrorMessage(mPG);
             fprintf(stderr, "SELECT failed: %s", PQerrorMessage(mPG));
             PQclear(res);
+            ConnectionPool::Get()->releaseConnection(mPG);
             //exit_nicely(conn);
             return;
         }
@@ -617,6 +633,7 @@ void CarManager::GetNumCarsBySerie(const std::string& serie, std::vector<int>& o
         free(temp);
         PQclear(res);
     }
+    ConnectionPool::Get()->releaseConnection(mPG);
 }
 
 void CarManager::GetNumCars(const std::string& make, std::vector<int>& outCounts)
@@ -638,6 +655,7 @@ void CarManager::GetNumCars(const std::string& make, std::vector<int>& outCounts
             fprintf(stderr, "SELECT failed: %s", PQerrorMessage(mPG));
             PQclear(res);
             //exit_nicely(conn);
+            ConnectionPool::Get()->releaseConnection(mPG);
             return;
         }
         char* temp = (char*)calloc(256, sizeof(char));
@@ -646,6 +664,7 @@ void CarManager::GetNumCars(const std::string& make, std::vector<int>& outCounts
         free(temp);
         PQclear(res);
     }
+    ConnectionPool::Get()->releaseConnection(mPG);
 }
 
 void CarManager::GetNumCars(std::vector<int>& outCounts)
@@ -664,6 +683,7 @@ void CarManager::GetNumCars(std::vector<int>& outCounts)
             fprintf(stderr, "SELECT failed: %s", PQerrorMessage(mPG));
             PQclear(res);
             //exit_nicely(conn);
+            ConnectionPool::Get()->releaseConnection(mPG);
             return;
         }
         char* temp = (char*)calloc(256, sizeof(char));
@@ -672,6 +692,7 @@ void CarManager::GetNumCars(std::vector<int>& outCounts)
         free(temp);
         PQclear(res);
     }
+    ConnectionPool::Get()->releaseConnection(mPG);
 }
 
 void CarManager::GetCars(int userId, std::vector<DBCar*>& cars)
@@ -679,7 +700,7 @@ void CarManager::GetCars(int userId, std::vector<DBCar*>& cars)
 	std::string sql = "SELECT * FROM cars WHERE user_id = "
         + std::to_string(userId) + " order by refresh_ts desc;";
 
-    PGconn* mPG = ConnectionPool::Get()->getConnection();//ConnectionPool::Get()->getConnection();
+  PGconn* mPG = ConnectionPool::Get()->getConnection();//ConnectionPool::Get()->getConnection();
 	PGresult* res = PQexec(mPG, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
@@ -967,9 +988,11 @@ bool CarManager::SetCarAvatar(int carId, const std::string& avatarPath)
 		char* err = PQerrorMessage(mPG);
 		fprintf(stderr, "Add car image failed: %s", PQerrorMessage(mPG));
 		PQclear(res);
+    ConnectionPool::Get()->releaseConnection(mPG);
 		return false;
 	}
 
+  ConnectionPool::Get()->releaseConnection(mPG);
 	return true;
 }
 
@@ -1007,11 +1030,13 @@ bool CarManager::DeleteCarImage(int carId, int imageId)
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "Delete car image failed: %s", PQerrorMessage(pg));
         PQclear(res);
-         PQfinish(pg);
+         // PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return false;
     }
     PQclear(res);
-    PQfinish(pg);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
     return true;
 }
 
@@ -1095,6 +1120,7 @@ int CarManager::GetCarStars(int carId)
         char* err = PQerrorMessage(mPG);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(mPG));
         PQclear(res);
+        ConnectionPool::Get()->releaseConnection(mPG);
         return 0;
         //exit_nicely(conn);
     }
@@ -1102,6 +1128,7 @@ int CarManager::GetCarStars(int carId)
     if (!imageCount)
     {
        PQclear(res);
+       ConnectionPool::Get()->releaseConnection(mPG);
        return 0;
     }
     int sumStars = 0;
@@ -1114,6 +1141,7 @@ int CarManager::GetCarStars(int carId)
     free(tmp);
 
     PQclear(res);
+    ConnectionPool::Get()->releaseConnection(mPG);
     return sumStars;
 }
 
@@ -1308,8 +1336,10 @@ bool CarManager::UpdateCarStars(int userId, int carId, int numStars)
                     char* err = PQerrorMessage(mPG);
                     fprintf(stderr, "Update car stars failed: %s", PQerrorMessage(mPG));
                     PQclear(res);
+                    ConnectionPool::Get()->releaseConnection(mPG);
                     return false;
                 }
+                ConnectionPool::Get()->releaseConnection(mPG);
                 return true;
             }
 
@@ -1320,6 +1350,7 @@ bool CarManager::UpdateCarStars(int userId, int carId, int numStars)
                 char* err = PQerrorMessage(mPG);
                 fprintf(stderr, "Update car stars failed: %s", PQerrorMessage(mPG));
                 PQclear(res);
+                ConnectionPool::Get()->releaseConnection(mPG);
                 return false;
             }
 
@@ -1331,9 +1362,10 @@ bool CarManager::UpdateCarStars(int userId, int carId, int numStars)
 //            }
 //            free(tmp);
             PQclear(res);
+            ConnectionPool::Get()->releaseConnection(mPG);
             return true;
         }
-
+        ConnectionPool::Get()->releaseConnection(mPG);
     }
 
 //    std::string sql = "INSERT INTO car_stars(user_id, car_id, num_stars) VALUES ("
@@ -1350,6 +1382,6 @@ bool CarManager::UpdateCarStars(int userId, int carId, int numStars)
 //        PQclear(res);
 //        return false;
 //    }
-
+   
     return true;
 }

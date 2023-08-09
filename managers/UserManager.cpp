@@ -35,11 +35,12 @@ int UserManager::CreateUser(const std::string& username, const std::string& phon
     PGresult* res = PQexec(pg, sql.c_str());
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-        char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
-		PQclear(res);
-		//exit_nicely(conn);
-        return -1;
+      char* err = PQerrorMessage(pg);
+      fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+		  PQclear(res);
+      ConnectionPool::Get()->releaseConnection(pg);
+	  	//exit_nicely(conn);
+      return -1;
     }
 
     /*pqxx::work W(*mPsql);
@@ -61,6 +62,7 @@ int UserManager::CreateUser(const std::string& username, const std::string& phon
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pg);
         return -1;
     }
     char* temp = (char*)calloc(256, sizeof(char));
@@ -68,6 +70,7 @@ int UserManager::CreateUser(const std::string& username, const std::string& phon
     strcpy(temp, PQgetvalue(res, 0, 0));
     int id = atoi(temp);
     free(temp);
+    ConnectionPool::Get()->releaseConnection(pg);
     return id;
 }
 #include <cstdlib>
@@ -82,7 +85,8 @@ std::vector<std::string> UserManager::UserGetAutoPartMakes(int id)
     {
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return makes;
     }
 
@@ -91,7 +95,8 @@ std::vector<std::string> UserManager::UserGetAutoPartMakes(int id)
     if (!nt)
     {
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return makes;
     }
 
@@ -103,7 +108,8 @@ std::vector<std::string> UserManager::UserGetAutoPartMakes(int id)
     }
     free(temp);
     PQclear(res);
-    PQfinish(pg);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
     return makes;
 }
 
@@ -117,7 +123,8 @@ std::vector<int> UserManager::UserGetAutoPartCategories(int id)
     {
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return makes;
     }
 
@@ -126,7 +133,8 @@ std::vector<int> UserManager::UserGetAutoPartCategories(int id)
     if (!nt)
     {
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return makes;
     }
 
@@ -138,7 +146,8 @@ std::vector<int> UserManager::UserGetAutoPartCategories(int id)
     }
     free(temp);
     PQclear(res);
-    PQfinish(pg);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
     return makes;
 }
 
@@ -221,7 +230,8 @@ int UserManager::GetUserNumGolds(int id)
     {
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return 0;
     }
 
@@ -229,7 +239,8 @@ int UserManager::GetUserNumGolds(int id)
     strcpy(temp, PQgetvalue(res, 0, 0));
     int numGolds = atoi(temp);
     PQclear(res);
-    PQfinish(pg);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
     free(temp);
     return numGolds;
 }
@@ -243,12 +254,14 @@ bool UserManager::UserEarnGold(int id)
     {
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return false;
     }
 
     PQclear(res);
-    PQfinish(pg);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
     return true;
 }
 
@@ -261,12 +274,14 @@ bool UserManager::UserReceiveGift(int giftId)
     {
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return false;
     }
 
     PQclear(res);
-    PQfinish(pg);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
     return true;
 }
 
@@ -279,7 +294,8 @@ DBGift* UserManager::GetUserGift(int id)
     {
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return nullptr;
     }
 
@@ -287,7 +303,8 @@ DBGift* UserManager::GetUserGift(int id)
     if (!nt)
     {
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return nullptr;
     }
 
@@ -300,7 +317,8 @@ DBGift* UserManager::GetUserGift(int id)
     pGift->Type = atoi(temp);
 
     PQclear(res);
-    PQfinish(pg);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
     return pGift;
 }
 
@@ -317,10 +335,12 @@ bool UserManager::ChangePassword(const std::string& phone, const std::string& pa
       char* err = PQerrorMessage(pg);
       fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
 		  PQclear(res);
-      PQfinish(pg);
+      //PQfinish(pg);
+      ConnectionPool::Get()->releaseConnection(pg);
 		  //exit_nicely(conn);
 		  return false;
 	  }
+    ConnectionPool::Get()->releaseConnection(pg);
 }
 
 DBUser* UserManager::GetUser(const std::string& username)
@@ -445,33 +465,35 @@ bool UserManager::EditUser(int id, const std::string& firstName, const std::stri
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         //exit_nicely(conn);
         return false;
     }
     PQclear(res);
-    PQfinish(pg);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
     return true;
 }
 
 DBUser* UserManager::GetUser(int id)
 {
   if (id <= 0) return nullptr;
-    std::string sql = "SELECT * FROM users WHERE id = "
+  std::string sql = "SELECT * FROM users WHERE id = "
             + std::to_string(id) + ";";
 
-    PGconn* pConn = ConnectionPool::Get()->getConnection();//ConnectionPool::Get()->getConnection();
+  PGconn* pConn = ConnectionPool::Get()->getConnection();//ConnectionPool::Get()->getConnection();
 
-    PGresult* res = PQexec(pConn, sql.c_str());
+  PGresult* res = PQexec(pConn, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0)
 	{
-        char* err = PQerrorMessage(pConn);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
-		PQclear(res);
-       // ConnectionPool::Get()->releaseConnection(pConn);
-       ConnectionPool::Get()->releaseConnection(pConn);
-		//exit_nicely(conn);
-		return nullptr;
+      char* err = PQerrorMessage(pConn);
+      fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
+		  PQclear(res);
+      // ConnectionPool::Get()->releaseConnection(pConn);
+      ConnectionPool::Get()->releaseConnection(pConn);
+		  //exit_nicely(conn);
+		  return nullptr;
 	}
 
 	char* temp = (char*)calloc(256, sizeof(char));
@@ -538,7 +560,7 @@ DBUser* UserManager::GetUser(int id)
     //ConnectionPool::Get()->releaseConnection(pConn);
   ConnectionPool::Get()->releaseConnection(pConn);
 	free(temp);
-    return pUser;
+  return pUser;
 }
 
 bool UserManager::SetUserAvatar(int userId, const std::string& avatarPath)
@@ -551,10 +573,12 @@ bool UserManager::SetUserAvatar(int userId, const std::string& avatarPath)
         char* err = PQerrorMessage(pg);
         fprintf(stderr, "Add car image failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        PQfinish(pg);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
         return false;
     }
     PQclear(res);
-    PQfinish(pg);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
     return true;
 }
