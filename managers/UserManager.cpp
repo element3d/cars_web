@@ -31,7 +31,7 @@ int UserManager::CreateUser(const std::string& username, const std::string& phon
 			"');";
 
 
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
@@ -76,7 +76,7 @@ std::vector<std::string> UserManager::UserGetAutoPartMakes(int id)
 {
     std::vector<std::string> makes;
     std::string sql = "SELECT make FROM user_auto_part_makes WHERE user_id=" + std::to_string(id) + ";";
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
@@ -111,7 +111,7 @@ std::vector<int> UserManager::UserGetAutoPartCategories(int id)
 {
     std::vector<int> makes;
     std::string sql = "SELECT category FROM user_auto_part_categories WHERE user_id=" + std::to_string(id) + ";";
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
@@ -145,7 +145,7 @@ std::vector<int> UserManager::UserGetAutoPartCategories(int id)
 void UserManager::UserSetAutoPartCategories(int id, const std::vector<int>& categories)
 {
     std::string sql = "DELETE FROM user_auto_part_categories WHERE user_id=" + std::to_string(id) + ";";
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
@@ -180,7 +180,7 @@ void UserManager::UserSetAutoPartCategories(int id, const std::vector<int>& cate
 void UserManager::UserSetAutoPartMakes(int id, const std::vector<std::string>& makes)
 {
     std::string sql = "DELETE FROM user_auto_part_makes WHERE user_id=" + std::to_string(id) + ";";
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
@@ -215,7 +215,7 @@ void UserManager::UserSetAutoPartMakes(int id, const std::vector<std::string>& m
 int UserManager::GetUserNumGolds(int id)
 {
     std::string sql = "SELECT num_golds FROM users WHERE id = " + std::to_string(id) + ";";
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
@@ -237,7 +237,7 @@ int UserManager::GetUserNumGolds(int id)
 bool UserManager::UserEarnGold(int id)
 {
     std::string sql = "UPDATE users set num_golds=num_golds+1 WHERE id = " + std::to_string(id) + ";";
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
@@ -255,7 +255,7 @@ bool UserManager::UserEarnGold(int id)
 bool UserManager::UserReceiveGift(int giftId)
 {
     std::string sql = "DELETE FROM gifts WHERE id = " + std::to_string(giftId) + ";";
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
@@ -273,7 +273,7 @@ bool UserManager::UserReceiveGift(int giftId)
 DBGift* UserManager::GetUserGift(int id)
 {
     std::string sql = "SELECT * FROM gifts WHERE user_id = " + std::to_string(id) + ";";
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
@@ -309,7 +309,7 @@ bool UserManager::ChangePassword(const std::string& phone, const std::string& pa
    std::string sql = "UPDATE USERS SET password = '"
             + password + "' WHERE username = '" + phone + "';";
 
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
 
     PGresult* res = PQexec(pg, sql.c_str());
 	  if (PQresultStatus(res) != PGRES_COMMAND_OK)
@@ -327,7 +327,7 @@ DBUser* UserManager::GetUser(const std::string& username)
 {
     std::string sql = "SELECT * FROM users WHERE username = '"
             + username + "';";
-   PGconn* pg = ConnectionPool::Get()->getConnection(); //GetPQConnection();
+   PGconn* pg = ConnectionPool::Get()->getConnection(); //ConnectionPool::Get()->getConnection();
 
     PGresult* res = PQexec(pg, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
@@ -438,7 +438,7 @@ bool UserManager::EditUser(int id, const std::string& firstName, const std::stri
     std::string sql = "UPDATE users SET first_name='" + firstName + "', second_name = '" + secondName + "', phone = '" + phone + "' WHERE id = "
             + std::to_string(id) + ";";
 
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
@@ -460,7 +460,7 @@ DBUser* UserManager::GetUser(int id)
     std::string sql = "SELECT * FROM users WHERE id = "
             + std::to_string(id) + ";";
 
-    PGconn* pConn = ConnectionPool::Get()->getConnection();//GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();//ConnectionPool::Get()->getConnection();
 
     PGresult* res = PQexec(pConn, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0)
@@ -468,7 +468,7 @@ DBUser* UserManager::GetUser(int id)
         char* err = PQerrorMessage(pConn);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
 		PQclear(res);
-       // CloseConnection(pConn);
+       // ConnectionPool::Get()->releaseConnection(pConn);
        ConnectionPool::Get()->releaseConnection(pConn);
 		//exit_nicely(conn);
 		return nullptr;
@@ -535,7 +535,7 @@ DBUser* UserManager::GetUser(int id)
     DBUser* pUser = new DBUser();
     pUser->Id = id;
     pUser->Phone = ph;*/
-    //CloseConnection(pConn);
+    //ConnectionPool::Get()->releaseConnection(pConn);
   ConnectionPool::Get()->releaseConnection(pConn);
 	free(temp);
     return pUser;
@@ -544,7 +544,7 @@ DBUser* UserManager::GetUser(int id)
 bool UserManager::SetUserAvatar(int userId, const std::string& avatarPath)
 {
     std::string sql = "UPDATE users SET avatar = '" + avatarPath + "' WHERE id = " + std::to_string(userId) + ";";
-    PGconn* pg = GetPQConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {

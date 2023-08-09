@@ -30,7 +30,7 @@ int AutoPartManager::CreateAutoPart(int userId, const std::string& autoPartJson)
         + d["description"].GetString() + "'"
 		");";
 
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
@@ -82,7 +82,7 @@ int AutoPartManager::CreateAutoPartResponse(int userId, const std::string& autoP
     rapidjson::Document d;
     d.Parse(autoPartResponseJson.c_str());
 
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
     int reqId = -1;
     {
         std::string sql = "SELECT req_id FROM auto_part_notes WHERE id = "
@@ -93,7 +93,7 @@ int AutoPartManager::CreateAutoPartResponse(int userId, const std::string& autoP
         if (!rec_count)
         {
             PQclear(res);
-            CloseConnection(pConn);
+            ConnectionPool::Get()->releaseConnection(pConn);
             return -1;
         }
 
@@ -122,7 +122,7 @@ int AutoPartManager::CreateAutoPartResponse(int userId, const std::string& autoP
 //		char* err = PQerrorMessage(pConn);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
         PQclear(res);
-        CloseConnection(pConn);
+        ConnectionPool::Get()->releaseConnection(pConn);
         return -1;
     }
 
@@ -142,7 +142,7 @@ int AutoPartManager::CreateAutoPartResponse(int userId, const std::string& autoP
 
 
     PQclear(res);
-    CloseConnection(pConn);
+    ConnectionPool::Get()->releaseConnection(pConn);
     return id;
 }
 
@@ -151,19 +151,19 @@ void AutoPartManager::DeleteAutoPartNotification(int id, int resUserId)
     std::string sql = "DELETE FROM auto_part_notes WHERE id = "
         + std::to_string(id) + " AND res_user_id =" + std::to_string(resUserId) + ";";
 
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
     PQclear(res);
     sql = "DELETE FROM auto_part_responses WHERE note_id = "
            + std::to_string(id) + ";";
     res = PQexec(pConn, sql.c_str());
     PQclear(res);
-    CloseConnection(pConn);
+    ConnectionPool::Get()->releaseConnection(pConn);
 }
 
 void AutoPartManager::GetAutoPartResponse(int userId, int id,  rapidjson::Document& d)
 {
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
     std::string sql = "SELECT * FROM auto_part_responses WHERE id = "
         + std::to_string(id) + ";";
     PGresult* res = PQexec(pConn, sql.c_str());
@@ -281,12 +281,12 @@ void AutoPartManager::GetAutoPartResponse(int userId, int id,  rapidjson::Docume
         PQclear(res);
     }
 
-    CloseConnection(pConn);
+    ConnectionPool::Get()->releaseConnection(pConn);
 }
 
 void AutoPartManager::GetAutoPartNotification(int id, rapidjson::Document& d)
 {
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
     std::string sql = "UPDATE auto_part_notes SET STATUS = 1 WHERE id = "
         + std::to_string(id) + ";";
     PGresult* res = PQexec(pConn, sql.c_str());
@@ -302,7 +302,7 @@ void AutoPartManager::GetAutoPartNotification(int id, rapidjson::Document& d)
     if (!rec_count)
     {
         PQclear(res);
-        CloseConnection(pConn);
+        ConnectionPool::Get()->releaseConnection(pConn);
         return;
     }
 
@@ -362,7 +362,7 @@ void AutoPartManager::GetAutoPartNotification(int id, rapidjson::Document& d)
         if (!rec_count)
         {
              PQclear(r);
-             CloseConnection(pConn);
+             ConnectionPool::Get()->releaseConnection(pConn);
              return;
         }
         char* temp = (char*)calloc(256, sizeof(char));
@@ -420,7 +420,7 @@ void AutoPartManager::GetAutoPartNotification(int id, rapidjson::Document& d)
         d.AddMember("responses", responses, d.GetAllocator());
     }
 
-    CloseConnection(pConn);
+    ConnectionPool::Get()->releaseConnection(pConn);
 }
 
 void AutoPartManager::GetAutoPartNotifications(int userId, rapidjson::Document& d)
@@ -428,7 +428,7 @@ void AutoPartManager::GetAutoPartNotifications(int userId, rapidjson::Document& 
     std::string sql = "SELECT id, req_id, status FROM auto_part_notes WHERE res_user_id = "
         + std::to_string(userId) + ";";
 
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
 
     d.SetArray();
@@ -487,7 +487,7 @@ void AutoPartManager::GetAutoPartNotifications(int userId, rapidjson::Document& 
     }
     free(temp);
     PQclear(res);
-    CloseConnection(pConn);
+    ConnectionPool::Get()->releaseConnection(pConn);
 }
 
 void AutoPartManager::DeleteAutoPart(int userId, int autoPartId)
@@ -495,14 +495,14 @@ void AutoPartManager::DeleteAutoPart(int userId, int autoPartId)
     std::string sql = "DELETE FROM auto_part_requests WHERE user_id = "
         + std::to_string(userId) + " AND id = " + std::to_string(autoPartId) + ";";
 
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
 //		char* err = PQerrorMessage(pConn);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
         PQclear(res);
-        CloseConnection(pConn);
+        ConnectionPool::Get()->releaseConnection(pConn);
         //exit_nicely(conn);
         return;
     }
@@ -516,7 +516,7 @@ void AutoPartManager::DeleteAutoPart(int userId, int autoPartId)
     PQclear(res);
     res = PQexec(pConn, sql.c_str());
 
-    CloseConnection(pConn);
+    ConnectionPool::Get()->releaseConnection(pConn);
 }
 
 void AutoPartManager::GetAutoPart(int userId, int autoPartId, rapidjson::Document& d)
@@ -524,7 +524,7 @@ void AutoPartManager::GetAutoPart(int userId, int autoPartId, rapidjson::Documen
     std::string sql = "SELECT * FROM auto_part_requests WHERE user_id = "
         + std::to_string(userId) + " AND id = " + std::to_string(autoPartId) + ";";
 
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
@@ -618,7 +618,7 @@ void AutoPartManager::GetAutoPart(int userId, int autoPartId, rapidjson::Documen
 
      free(temp);
     PQclear(res);
-    CloseConnection(pConn);
+    ConnectionPool::Get()->releaseConnection(pConn);
 }
 
 void AutoPartManager::GetAutoParts(int userId, std::vector<DBAutoPartRequest*>& autoParts)
@@ -626,7 +626,7 @@ void AutoPartManager::GetAutoParts(int userId, std::vector<DBAutoPartRequest*>& 
     std::string sql = "SELECT * FROM auto_part_requests WHERE user_id = "
 		+ std::to_string(userId) + ";";
 
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
@@ -718,7 +718,7 @@ void AutoPartManager::GetTopAutoPartsByType(int type, std::vector<DBAutoPart*>& 
 	else
 		sql = "SELECT * FROM auto_parts WHERE type = " + std::to_string(type) + ";";
 
-     PGconn* pConn = GetPQConnection();
+     PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
@@ -735,7 +735,7 @@ void AutoPartManager::GetTopAutoPartsByType(int type, std::vector<DBAutoPart*>& 
 bool AutoPartManager::SetAutoPartResponseAvatar(int autoPartId, const std::string& avatarPath)
 {
     std::string sql = "UPDATE auto_part_responses SET avatar = '" + avatarPath + "' WHERE id = " + std::to_string(autoPartId) + ";";
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
@@ -751,7 +751,7 @@ bool AutoPartManager::SetAutoPartResponseAvatar(int autoPartId, const std::strin
 bool AutoPartManager::SetAutoPartAvatar(int autoPartId, const std::string& avatarPath)
 {
     std::string sql = "UPDATE auto_part_requests SET avatar = '" + avatarPath + "' WHERE id = " + std::to_string(autoPartId) + ";";
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
@@ -771,7 +771,7 @@ bool AutoPartManager::AddAutoPartImage(int autoPartId, const std::string& imageP
 		+ imagePath + "'"
 		+ ");";
 
-      PGconn* pConn = GetPQConnection();
+      PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
@@ -788,7 +788,7 @@ bool AutoPartManager::_ParseGPResult(PGresult* res, std::vector<DBAutoPartReques
 {
 	char* temp = (char*)calloc(256, sizeof(char));
 
-    PGconn* pConn = GetPQConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
 	int rec_count = PQntuples(res);
 	for (int i = 0; i < rec_count; i++)
 	{
@@ -856,6 +856,6 @@ bool AutoPartManager::_ParseGPResult(PGresult* res, std::vector<DBAutoPartReques
 	}
 	free(temp);
 	PQclear(res);
-    CloseConnection(pConn);
+    ConnectionPool::Get()->releaseConnection(pConn);
 	return true;
 }
