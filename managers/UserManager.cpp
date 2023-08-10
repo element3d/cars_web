@@ -23,44 +23,31 @@ int UserManager::CreateUser(const std::string& username, const std::string& phon
     std::string sql = "INSERT INTO users(username, phone, password, type, first_name, second_name, num_golds) VALUES ('"
             + username + "', '"
             + phone + "', '" 
-			+ password + "', " 
-			+ std::to_string(type) + ", '"
-			+ firstName + "', '"
+			      + password + "', " 
+			      + std::to_string(type) + ", '"
+			      + firstName + "', '"
             + secondName + "', '"
             + std::to_string(20) +
-			"');";
+			      "');";
 
 
     PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
-	if (PQresultStatus(res) != PGRES_COMMAND_OK)
-	{
-      char* err = PQerrorMessage(pg);
-      fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
-		  PQclear(res);
-      ConnectionPool::Get()->releaseConnection(pg);
-	  	//exit_nicely(conn);
-      return -1;
+	  if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	  {
+        char* err = PQerrorMessage(pg);
+        fprintf(stderr, "Error: Failed to create user: %s", PQerrorMessage(pg));
+		    PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pg);
+        return -1;
     }
 
-    /*pqxx::work W(*mPsql);
-    try
-    {
-        pqxx::result res = W.exec( sql );
-    }
-    catch(const std::exception &e)
-    {
-        std::cerr << e.what() << std::endl;
-        return false;
-    }
-    W.commit();*/
-//    return true;
     sql = "SELECT currval('users_id_seq');";
     res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        fprintf(stderr, "Error: Failed to get new user id: %s", PQerrorMessage(pg));
         PQclear(res);
         ConnectionPool::Get()->releaseConnection(pg);
         return -1;
@@ -85,7 +72,6 @@ std::vector<std::string> UserManager::UserGetAutoPartMakes(int id)
     {
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
-        //PQfinish(pg);
         ConnectionPool::Get()->releaseConnection(pg);
         return makes;
     }
@@ -228,9 +214,8 @@ int UserManager::GetUserNumGolds(int id)
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        fprintf(stderr, "Error: Failed to get num_golds: %s", PQerrorMessage(pg));
         PQclear(res);
-        //PQfinish(pg);
         ConnectionPool::Get()->releaseConnection(pg);
         return 0;
     }
@@ -239,7 +224,6 @@ int UserManager::GetUserNumGolds(int id)
     strcpy(temp, PQgetvalue(res, 0, 0));
     int numGolds = atoi(temp);
     PQclear(res);
-    //PQfinish(pg);
     ConnectionPool::Get()->releaseConnection(pg);
     free(temp);
     return numGolds;
@@ -465,15 +449,12 @@ bool UserManager::EditUser(int id, const std::string& firstName, const std::stri
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        fprintf(stderr, "Error: Failed to edit user: %s", PQerrorMessage(pg));
         PQclear(res);
-        //PQfinish(pg);
         ConnectionPool::Get()->releaseConnection(pg);
-        //exit_nicely(conn);
         return false;
     }
     PQclear(res);
-    //PQfinish(pg);
     ConnectionPool::Get()->releaseConnection(pg);
     return true;
 }
@@ -490,7 +471,7 @@ DBUser* UserManager::GetUser(int id)
 	if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0)
 	{
       char* err = PQerrorMessage(pConn);
-      fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
+      fprintf(stderr, "Error: Failed to get user: %s", PQerrorMessage(pConn));
 		  PQclear(res);
       // ConnectionPool::Get()->releaseConnection(pConn);
       ConnectionPool::Get()->releaseConnection(pConn);

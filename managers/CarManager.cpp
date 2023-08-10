@@ -17,11 +17,9 @@ CarManager* CarManager::Get()
 
 int CarManager::CreateCar(int userId, const std::string& carJson)
 {
-	rapidjson::Document d;
-	d.Parse(carJson.c_str());
-    std::cout << "Create car............................................\n";
-    std::cout << carJson << std::endl;
-
+	  rapidjson::Document d;
+	  d.Parse(carJson.c_str());
+  
     if (!d.HasMember("model")) return -1;
 
     PGconn* pg = ConnectionPool::Get()->getConnection();
@@ -30,9 +28,8 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        fprintf(stderr, "Error: Failed to get num_golds: %s", PQerrorMessage(pg));
         PQclear(res);
-        //PQfinish(pg);
         ConnectionPool::Get()->releaseConnection(pg);
         return -1;
     }
@@ -103,33 +100,31 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
 
 
     res = PQexec(pg, sql.c_str());
-	if (PQresultStatus(res) != PGRES_COMMAND_OK)
-	{
+	  if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	  {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
-		  PQclear(res);
-        //PQfinish(pg);
-      ConnectionPool::Get()->releaseConnection(pg);
-		return -1;
-	}
+        fprintf(stderr, "Error: Failed to create car: %s", PQerrorMessage(pg));
+		    PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pg);
+		    return -1;
+	  }
 
-	sql = "SELECT currval('cars_id_seq');";
+	  sql = "SELECT currval('cars_id_seq');";
     res = PQexec(pg, sql.c_str());
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
+	  if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	  {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
-		PQclear(res);
-        //PQfinish(pg);
-    ConnectionPool::Get()->releaseConnection(pg);
-		return -1;
-	}
+        fprintf(stderr, "Error: Failed to get new car id: %s", PQerrorMessage(pg));
+		    PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pg);
+	  	  return -1;
+	  }
 
-	char* temp = (char*)calloc(256, sizeof(char));
-	int rec_count = PQntuples(res);
-	strcpy(temp, PQgetvalue(res, 0, 0));
-	int id = atoi(temp);
-	free(temp);
+	  char* temp = (char*)calloc(256, sizeof(char));
+	  int rec_count = PQntuples(res);
+	  strcpy(temp, PQgetvalue(res, 0, 0));
+	  int id = atoi(temp);
+	  free(temp);
 
     if (dg)
     {
@@ -138,7 +133,6 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
         PQclear(res);
     }
 
-    //PQfinish(pg);
     ConnectionPool::Get()->releaseConnection(pg);
 	  return id;
 }
@@ -153,11 +147,9 @@ bool CarManager::DeleteCar(int userId, int id)
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        fprintf(stderr, "Error: Failed to delete car: %s", PQerrorMessage(pg));
         PQclear(res);
-        //PQfinish(pg);
         ConnectionPool::Get()->releaseConnection(pg);
-        //exit_nicely(conn);
         return 0;
     }
 
@@ -167,10 +159,8 @@ bool CarManager::DeleteCar(int userId, int id)
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        fprintf(stderr, "Error: Failed to delete car images: %s", PQerrorMessage(pg));
         PQclear(res);
-        //PQfinish(pg);
-        //exit_nicely(conn);
         ConnectionPool::Get()->releaseConnection(pg);
         return 0;
     }
@@ -191,7 +181,6 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
 {
     rapidjson::Document d;
     d.Parse(carJson.c_str());
-    std::cout << carJson << std::endl;
 
     std::string sql = "SELECT on_top FROM cars WHERE id=" + std::to_string(id) + ";";
 
@@ -200,10 +189,8 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        fprintf(stderr, "Error: Failed to get on_top: %s", PQerrorMessage(pg));
         PQclear(res);
-        //PQfinish(pg);
-        //exit_nicely(conn);
         ConnectionPool::Get()->releaseConnection(pg);
         return 0;
     }
@@ -228,7 +215,7 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
             res = PQexec(pg, sql.c_str());
             if (PQresultStatus(res) != PGRES_TUPLES_OK)
             {
-                fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+                fprintf(stderr, "Error: Failed to get num_golds: %s", PQerrorMessage(pg));
                 PQclear(res);
             }
             else
@@ -245,11 +232,9 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
                     if (PQresultStatus(res) != PGRES_TUPLES_OK && PQresultStatus(res) != PGRES_COMMAND_OK)
                     {
                         char* err = PQerrorMessage(pg);
-                        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+                        fprintf(stderr, "Error: Failed to set num_golds: %s", PQerrorMessage(pg));
                         PQclear(res);
-                        //PQfinish(pg);
                         ConnectionPool::Get()->releaseConnection(pg);
-                        //exit_nicely(conn);
                         return 0;
                     }
 
@@ -324,9 +309,8 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        fprintf(stderr, "Error: Failed to update car: %s", PQerrorMessage(pg));
         PQclear(res);
-        //PQfinish(pg);
         ConnectionPool::Get()->releaseConnection(pg);
         return false;
     }
@@ -353,13 +337,13 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
 
 void CarManager::GetTopCarsBySerie(int serie, std::vector<DBCar*>& cars)
 {
-	std::string sql;
-	if (serie == -1)
-        sql = "SELECT * FROM cars WHERE on_sale = 1  ORDER BY random()  limit 10;";
-	else
-        sql = "SELECT * FROM cars WHERE on_sale = 1 AND class = " + std::to_string(serie) + "  ORDER BY random() limit 10;";
+	  std::string sql;
+	  if (serie == -1)
+          sql = "SELECT * FROM cars WHERE on_sale = 1  ORDER BY random()  limit 10;";
+	  else
+          sql = "SELECT * FROM cars WHERE on_sale = 1 AND class = " + std::to_string(serie) + "  ORDER BY random() limit 10;";
 
-     PGconn* pg = ConnectionPool::Get()->getConnection();
+    PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
@@ -367,7 +351,6 @@ void CarManager::GetTopCarsBySerie(int serie, std::vector<DBCar*>& cars)
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
         PQclear(res);
         ConnectionPool::Get()->releaseConnection(pg);
-        //exit_nicely(conn);
         return;
     }
     ConnectionPool::Get()->releaseConnection(pg);
@@ -424,14 +407,12 @@ int CarManager::GetTotalNumCars(const CarFilter& filter)
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        fprintf(stderr, "Error: Failed to get num cars: %s", PQerrorMessage(pg));
         PQclear(res);
-        //PQfinish(pg);
         ConnectionPool::Get()->releaseConnection(pg);
-        //exit_nicely(conn);
         return 0;
     }
-    //PQfinish(pg);
+    
     ConnectionPool::Get()->releaseConnection(pg);
     char* temp = (char*)calloc(256, sizeof(char));
     strcpy(temp, PQgetvalue(res, 0, 0));
@@ -445,24 +426,20 @@ DBCar* CarManager::GetCar(int carId)
 {
     std::string sql;
     sql = std::string("SELECT * FROM cars WHERE id = " + std::to_string(carId));
-    //PGconn* pg = ConnectionPool::Get()->getConnection();
     ConnectionPool* pPool = ConnectionPool::Get();
     PGconn* pg = pPool->getConnection();
-
 
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        fprintf(stderr, "Error: Failed to get car: %s", PQerrorMessage(pg));
         PQclear(res);
         pPool->releaseConnection(pg);
-        //PQfinish(pg);
-        //exit_nicely(conn);
         return nullptr;
     }
-    //PQfinish(pg);
-     pPool->releaseConnection(pg);
+
+    pPool->releaseConnection(pg);
     std::vector<DBCar*> cars;
     _ParseGPResult(res, cars);
     if (!cars.size()) return nullptr;
@@ -471,7 +448,7 @@ DBCar* CarManager::GetCar(int carId)
 
 void CarManager::GetCars(const CarFilter& filter, int page, std::vector<DBCar*>& cars)
 {
-	std::string sql;
+	  std::string sql;
     sql = std::string("SELECT * FROM cars");
 
     if (filter.SubModel != "all")
@@ -591,20 +568,18 @@ void CarManager::GetCars(const CarFilter& filter, int page, std::vector<DBCar*>&
     PGconn* pg = pPool->getConnection();
 
     PGresult* res = PQexec(pg, sql.c_str());
-	if (PQresultStatus(res) != PGRES_TUPLES_OK)
-	{
+	  if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	  {
         char* err = PQerrorMessage(pg);
-        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
-		    PQclear(res);
+        fprintf(stderr, "Error: Failed to get cars: %s", PQerrorMessage(pg));
+	      PQclear(res);
         pPool->releaseConnection(pg);
-        //PQfinish(pg);
-		//exit_nicely(conn);
-		return;
-	}
+		    return;
+	  }
     //PQfinish(pg);
-  pPool->releaseConnection(pg);
-
-	_ParseGPResult(res, cars);
+    pPool->releaseConnection(pg);
+    
+	  _ParseGPResult(res, cars);
 }
 
 void CarManager::GetNumCarsBySerie(const std::string& serie, std::vector<int>& outCounts)
@@ -1277,6 +1252,9 @@ void CarManager::ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::s
 
         v.SetDouble(pCar->RefreshTs);
         o.AddMember("refresh_ts", v, d.GetAllocator());
+
+        v.SetInt(pCar->Rank);
+        o.AddMember("rank", v, d.GetAllocator());
 
 		v.SetArray();
 		for (auto& i : pCar->Images)

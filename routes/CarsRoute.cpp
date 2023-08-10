@@ -405,8 +405,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 //        float* data = stbi_loadf_from_memory((unsigned char*)image_file.content.c_str(), image_file.content.size(), &w, &h, &c, 0);
 //        stbi_write_jpg(filename.c_str(), w, h, c, data, 100);
 
-        std::cout << "Upload avatar ............................................\n";
-        std::cout << "filename " << filename << std::endl;
+   
         Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, "avatar", EImageContentType::Jpeg);
 		CarManager::Get()->SetCarAvatar(atoi(carId.c_str()), filename);
 		res.status = 200;
@@ -475,9 +474,6 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
         Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, rn, ct);
         bool isAva = atoi(isAvatar.content.c_str());
 
-
-        std::cout << "Upload image ............................................\n";
-        std::cout << "filename " << filename << std::endl;
         int id = CarManager::Get()->AddCarImage(atoi(carId.c_str()), filename);
         if (isAva)
             CarManager::Get()->SetCarAvatar(atoi(carId.c_str()), id);

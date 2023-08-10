@@ -32,7 +32,6 @@ int sign_in(const std::string& username, const std::string& password, std::strin
         .set_payload_claim("type", picojson::value(int64_t(pUser->Type)))
         .sign(jwt::algorithm::hs256{"secret"});
 
-    std::cout << "TOKEN " << token << std::endl;
     delete pUser;
     return 200;
 }
@@ -112,7 +111,6 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_header("Access-Control-Allow-Methods", "*");
         res.set_header("Access-Control-Allow-Headers", "*");
-        std::cout << req.body;
 
         rapidjson::Document document;
         document.Parse(req.body.c_str());
@@ -142,7 +140,6 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Ch
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_header("Access-Control-Allow-Methods", "*");
         res.set_header("Access-Control-Allow-Headers", "*");
-        std::cout << req.body;
 
         rapidjson::Document document;
         document.Parse(req.body.c_str());
@@ -178,7 +175,6 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_header("Access-Control-Allow-Methods", "*");
         res.set_header("Access-Control-Allow-Headers", "*");
-        std::cout << req.body;
 
         rapidjson::Document document;
         document.Parse(req.body.c_str());
@@ -207,7 +203,6 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_header("Access-Control-Allow-Methods", "*");
         res.set_header("Access-Control-Allow-Headers", "*");
-        std::cout << req.body;
 
         rapidjson::Document document;
         document.Parse(req.body.c_str());
@@ -258,7 +253,6 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
      res.set_header("Access-Control-Allow-Methods", "*");
       res.set_header("Access-Control-Allow-Headers", "*");
 
-        std::cout << req.body;
 
         rapidjson::Document document;
         document.Parse(req.body.c_str());

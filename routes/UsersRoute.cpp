@@ -28,7 +28,6 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
            res.set_header("Access-Control-Allow-Methods", "GET");
       res.set_header("Access-Control-Allow-Headers", "authentication");*/
         std::string token = req.get_header_value("Authentication");
-        std::cout << "ME: token: " << token << std::endl;
         auto decoded = jwt::decode(token);
 
         int userId = decoded.get_payload_claim("id").as_int();
@@ -134,7 +133,6 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
      res.set_header("Access-Control-Allow-Origin", "*");
 //        std::string userId = (req.get_param_value("user_id", 0).c_str());
         std::string token = req.get_header_value("Authentication");
-        std::cout << "ME: token: " << token << std::endl;
         auto decoded = jwt::decode(token);
 
 //        std::string phone = decoded.get_payload_claim("phone").as_string();
