@@ -1073,7 +1073,11 @@ int CarManager::GetCarUserVoteStars(int carId, int userId)
         //exit_nicely(conn);
     }
     int selectCount = PQntuples(res);
-    if (!selectCount) return 0;
+    if (!selectCount) 
+    {
+      ConnectionPool::Get()->releaseConnection(mPG);
+      return 0;
+    }
 
     int sumStars = 0;
     char* tmp = (char*)calloc(256, sizeof(char));
@@ -1135,13 +1139,31 @@ void CarManager::Refresh(int carId)
 
     PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
-    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
 //        char* err = PQerrorMessage(mPG);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
 //        PQclear(res);
 //        return;
         //exit_nicely(conn);
+    }
+    PQclear(res);
+    ConnectionPool::Get()->releaseConnection(pConn);
+}
+
+void CarManager::RequestModel(int userId, const std::string& msg)
+{
+    std::string sql = "INSERT INTO CAR_MODEL_REQS(user_id, msg) VALUES("
+        + std::to_string(userId)
+        + ", '"
+        + msg
+        + "');";
+
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pConn, sql.c_str());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    {
+        fprintf(stderr, "Error: Failed to create model request: %s", PQerrorMessage(pConn));
     }
     PQclear(res);
     ConnectionPool::Get()->releaseConnection(pConn);

@@ -543,12 +543,12 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsGetUserVoteStars()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {
-      res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
-     res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
 
         std::string carId = req.get_param_value("car_id", 0).c_str();
         std::string token = req.get_header_value("Authentication");
-          auto decoded = jwt::decode(token);
+        auto decoded = jwt::decode(token);
 
         int userId = decoded.get_payload_claim("id").as_int();
 
@@ -564,10 +564,38 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsRefresh()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
 
         std::string carId = req.get_param_value("car_id", 0).c_str();
 
         CarManager::Get()->Refresh(atoi(carId.c_str()));
+
+        res.status = 200;
+        res.set_content("OK", "text/plain");
+    };
+}
+
+std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsRequestModel()
+{
+    return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+        std::string token = req.get_header_value("Authentication");
+        auto decoded = jwt::decode(token);
+        int userId = decoded.get_payload_claim("id").as_int();
+
+        rapidjson::Document d;
+	      d.Parse(req.body.c_str());
+        if (userId < 0 || !d.HasMember("msg")) 
+        {
+            res.status = 200;
+            res.set_content("OK", "text/plain");
+            return;
+        }
+
+        CarManager::Get()->RequestModel(userId, d["msg"].GetString());
 
         res.status = 200;
         res.set_content("OK", "text/plain");

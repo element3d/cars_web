@@ -103,7 +103,7 @@ struct CarFilter
 class CarManager
 {
 public:
-	static CarManager* Get();
+	  static CarManager* Get();
 
 //	void SetPG(PGconn* pPG);
     int CreateCar(int userId, const std::string& carJson);
@@ -117,9 +117,9 @@ public:
     void GetNumCars(const std::string& make, std::vector<int>& outCounts);
     void GetNumCarsBySerie(const std::string& serie, std::vector<int>& outCounts);
 
-	void GetTopCarsByMake(int make, std::vector<DBCar*>& cars);
-	void GetTopCarsBySerie(int serie, std::vector<DBCar*>& cars);
-	bool SetCarAvatar(int carId, const std::string& avatarPath);
+	  void GetTopCarsByMake(int make, std::vector<DBCar*>& cars);
+	  void GetTopCarsBySerie(int serie, std::vector<DBCar*>& cars);
+	  bool SetCarAvatar(int carId, const std::string& avatarPath);
     bool SetCarAvatar(int carId, int imageId);
     int AddCarImage(int carId, const std::string& imagePath);
     bool DeleteCarImage(int carId, int imageId);
@@ -127,6 +127,7 @@ public:
     int GetCarStars(int carId);
     int GetCarUserVoteStars(int carId, int userId);
     void Refresh(int carId);
+    void RequestModel(int userId, const std::string& msg);
     void ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::string& json);
 private:
 	bool _ParseGPResult(PGresult* res, std::vector<DBCar*>& cars);

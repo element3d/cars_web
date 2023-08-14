@@ -32,13 +32,14 @@ int AutoPartManager::CreateAutoPart(int userId, const std::string& autoPartJson)
 
     PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
-	if (PQresultStatus(res) != PGRES_COMMAND_OK)
-	{
-//		char* err = PQerrorMessage(pConn);
+	  if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	  {
+  //		char* err = PQerrorMessage(pConn);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
-		PQclear(res);
-		return -1;
-	}
+		    PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+		    return -1;
+	  }
 
     sql = "SELECT currval('auto_part_requests_id_seq');";
     res = PQexec(pConn, sql.c_str());
@@ -47,6 +48,7 @@ int AutoPartManager::CreateAutoPart(int userId, const std::string& autoPartJson)
 //		char* err = PQerrorMessage(mPG);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
 		PQclear(res);
+    ConnectionPool::Get()->releaseConnection(pConn);
 		return -1;
 	}
 	char* temp = (char*)calloc(256, sizeof(char));
@@ -74,6 +76,7 @@ int AutoPartManager::CreateAutoPart(int userId, const std::string& autoPartJson)
     }
     PQclear(res);
     free(temp);
+    ConnectionPool::Get()->releaseConnection(pConn);
 	return id;
 }
 

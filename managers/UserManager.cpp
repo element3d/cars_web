@@ -355,7 +355,11 @@ DBUser* UserManager::GetUser(const std::string& username)
 	fprintf(stdout, "\n");*/
 
 	int nt = PQntuples(res);
-	if (!nt) return nullptr;
+	if (!nt)  
+  {
+    ConnectionPool::Get()->releaseConnection(pg);
+    return nullptr;
+  }
 	int nf = PQnfields(res);
 
 	char* temp = (char*)calloc(256, sizeof(char));
