@@ -3,6 +3,7 @@
 #include "PQManager.h"
 #include "EMake.h"
 #include <chrono>
+#include "EventsManager.h"
 
 CarManager* CarManager::sInstance = nullptr;
 
@@ -132,6 +133,26 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
         res = PQexec(pg, sql.c_str());
         PQclear(res);
     }
+
+    DBInception* pI = EventsManager::Get()->GetInception();
+    bool found = false;
+    if (pI->Status == EEventStatus::Started) 
+    {
+      for (auto uid : pI->Users) 
+      { 
+        if (uid == userId) 
+        {
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if (!found && pI->Status == EEventStatus::Started) 
+    {
+        EventsManager::Get()->InceptionAddUser(userId);
+    }
+    delete pI;
 
     ConnectionPool::Get()->releaseConnection(pg);
 	  return id;

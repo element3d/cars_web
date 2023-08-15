@@ -18,6 +18,7 @@
 #include "routes/UsersRoute.h"
 #include "routes/CarsRoute.h"
 #include "routes/AutoPartsRoute.h"
+#include "routes/EventsRoute.h"
 
 using namespace httplib;
 using namespace std;
@@ -490,6 +491,8 @@ int main(void)
     svr.Get("/api/v1/cars/user_stars", CarsRoute::Get()->CarsGetUserVoteStars());
     svr.Get("/api/v1/cars/refresh", CarsRoute::Get()->CarsRefresh());
     svr.Post("/api/v1/cars/req_model", CarsRoute::Get()->CarsRequestModel());
+
+    svr.Get("/api/v1/events/inception", EventsRoute::Get()->GetInception());
 
 	  svr.Get("/api/v1/my_auto_parts", AutoPartsRoute::Get()->MyAutoParts());
     svr.Post("/api/v1/auto_part", AutoPartsRoute::Get()->AutoPartPost());

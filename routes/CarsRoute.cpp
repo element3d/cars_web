@@ -174,9 +174,8 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsPost()
 {
-	return [](const httplib::Request& req, httplib::Response& res) {
-
-     res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+	  return [](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
         res.set_header("Access-Control-Allow-Origin", "*");
 
         std::string token = req.get_header_value("Authentication");
@@ -184,14 +183,14 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
         int userId = decoded.get_payload_claim("id").as_int();
 
         int carId = CarManager::Get()->CreateCar(userId, req.body);
-		if (carId == -1)
-		{
+		    if (carId == -1)
+		    {
             res.status = 501;
-			return;
-		}
-		res.set_content(std::to_string(carId).c_str(), "text/plain");
-		res.status = 200;
-	};
+			      return;
+		    }
+		    res.set_content(std::to_string(carId).c_str(), "text/plain");
+		    res.status = 200;
+	  };
 }
 
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsPut()
