@@ -10,6 +10,8 @@ public:
 	  static EventsRoute* Get();
 
 	  std::function<void(const httplib::Request &, httplib::Response &)> GetInception();
+	  std::function<void(const httplib::Request &, httplib::Response &)> EventsSetUser();
+	  std::function<void(const httplib::Request &, httplib::Response &)> EventsSetUserCard();
 
 private:
 	static EventsRoute* sInstance;

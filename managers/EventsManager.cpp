@@ -14,7 +14,7 @@ EventsManager* EventsManager::Get()
 
 DBInception* EventsManager::GetInception() 
 {
-    std::string sql = "select user_id from events_users where event_id = " + std::to_string(DB_INCEPTION_ID) + ";";
+    std::string sql = "select user_id, address, card from events_users where event_id = " + std::to_string(DB_INCEPTION_ID) + ";";
     PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
@@ -31,9 +31,14 @@ DBInception* EventsManager::GetInception()
     int numUsers = PQntuples(res);
     for (int i = 0; i < numUsers; i++)
 	  {
+        EventUser u;
         strcpy(temp, PQgetvalue(res, i, 0));
-        int userId = atoi(temp);
-        pI->Users.push_back(userId);
+        u.Id = atoi(temp);
+        strcpy(temp, PQgetvalue(res, i, 1));
+        u.Address = temp;
+        strcpy(temp, PQgetvalue(res, i, 2));
+        u.Card = temp;
+        pI->Users.push_back(u);
     }
 
     free(temp);
@@ -58,4 +63,42 @@ void EventsManager::InceptionAddUser(int userId)
     PQclear(res);    
     ConnectionPool::Get()->releaseConnection(pg);
     return;
+}
+
+void EventsManager::EventsSetUser(int userId, int eventId, const std::string& userJson)
+{
+    rapidjson::Document d;
+    d.Parse(userJson.c_str());
+
+    const std::string fName = d["first_name"].GetString();
+    const std::string lName = d["last_name"].GetString();
+    const std::string province = d["province"].GetString();
+    const std::string address = d["address"].GetString();
+
+    const std::string fullAddress = fName + ", " + lName + ", " + province + ", " + address;
+    std::string sql = "UPDATE events_users SET address = '" + fullAddress + "' WHERE user_id = " + std::to_string(userId) + " AND event_id = " + std::to_string(eventId) + ";";
+    PGconn* pg = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    {
+        fprintf(stderr, "Failed to add user info to event: %s", PQerrorMessage(pg));
+    }
+
+}
+
+void EventsManager::EventsSetUserCard(int userId, int eventId, const std::string& cardJson)
+{
+    rapidjson::Document d;
+    d.Parse(cardJson.c_str());
+
+    const std::string card = d["card"].GetString();
+ 
+    std::string sql = "UPDATE events_users SET card = '" + card + "' WHERE user_id = " + std::to_string(userId) + " AND event_id = " + std::to_string(eventId) + ";";
+    PGconn* pg = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    {
+        fprintf(stderr, "Failed to add user card to event: %s", PQerrorMessage(pg));
+    }
+
 }

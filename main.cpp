@@ -493,6 +493,8 @@ int main(void)
     svr.Post("/api/v1/cars/req_model", CarsRoute::Get()->CarsRequestModel());
 
     svr.Get("/api/v1/events/inception", EventsRoute::Get()->GetInception());
+    svr.Post("/api/v1/events/user", EventsRoute::Get()->EventsSetUser());
+    svr.Post("/api/v1/events/user_card", EventsRoute::Get()->EventsSetUserCard());
 
 	  svr.Get("/api/v1/my_auto_parts", AutoPartsRoute::Get()->MyAutoParts());
     svr.Post("/api/v1/auto_part", AutoPartsRoute::Get()->AutoPartPost());

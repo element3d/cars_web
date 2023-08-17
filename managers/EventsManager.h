@@ -14,12 +14,19 @@ enum class EEventStatus
   Finished = 2
 };
 
+struct EventUser 
+{
+  int Id;
+  std::string Address;
+  std::string Card;
+};
+
 struct DBInception 
 {
     int NumUsers;
     int RemainingNumUsers;
     EEventStatus Status;
-    std::vector<int> Users;
+    std::vector<EventUser> Users;
 
     std::string ToJson()
     {
@@ -31,9 +38,15 @@ struct DBInception
       
         rapidjson::Value users;
         users.SetArray();
-        for (auto& userId : Users) 
+
+        for (auto& user : Users) 
         {
-          users.PushBack(userId, d.GetAllocator());
+            rapidjson::Value u;
+            u.SetObject();
+            u.AddMember("id", user.Id, d.GetAllocator());
+            u.AddMember("awarded", user.Address.size() != 0 || user.Card.size() != 0, d.GetAllocator());
+         
+            users.PushBack(u, d.GetAllocator());
         }
         d.AddMember("users", users, d.GetAllocator());
 
@@ -52,6 +65,8 @@ public:
     static EventsManager* Get();
     DBInception* GetInception();
     void InceptionAddUser(int userId);
+    void EventsSetUser(int userId, int eventId, const std::string& userJson);
+    void EventsSetUserCard(int userId, int eventId, const std::string& cardJson);
 
 private:
     static EventsManager* sInstance;

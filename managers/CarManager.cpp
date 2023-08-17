@@ -138,9 +138,9 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
     bool found = false;
     if (pI->Status == EEventStatus::Started) 
     {
-      for (auto uid : pI->Users) 
+      for (auto u : pI->Users) 
       { 
-        if (uid == userId) 
+        if (u.Id == userId) 
         {
           found = true;
           break;
