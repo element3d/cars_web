@@ -146,16 +146,17 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
           break;
         }
       }
+
+      if (!found)
+      {
+          EventsManager::Get()->InceptionAddUser(userId);
+      }
     }
 
-    if (!found && pI->Status == EEventStatus::Started) 
-    {
-        EventsManager::Get()->InceptionAddUser(userId);
-    }
     delete pI;
 
     ConnectionPool::Get()->releaseConnection(pg);
-	  return id;
+	return id;
 }
 
 #include "../stlplus/file_system.hpp"

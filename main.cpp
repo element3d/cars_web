@@ -55,7 +55,7 @@ int main(void)
 {
     Server svr;
 
-    PGconn* pg = PQconnectdb("host=127.0.0.1 port=5432 dbname=cars user=postgres password=Narek_28");
+    PGconn* pg = PQconnectdb("host=127.0.0.1 port=5432 dbname=cars user=postgres password=postgres");
 
 
 
@@ -493,6 +493,7 @@ int main(void)
     svr.Post("/api/v1/cars/req_model", CarsRoute::Get()->CarsRequestModel());
 
     svr.Get("/api/v1/events/inception", EventsRoute::Get()->GetInception());
+    svr.Get("/api/v1/events/pit_stop", EventsRoute::Get()->GetPitStop());
     svr.Post("/api/v1/events/user", EventsRoute::Get()->EventsSetUser());
     svr.Post("/api/v1/events/user_card", EventsRoute::Get()->EventsSetUserCard());
 
@@ -537,5 +538,5 @@ int main(void)
     auto ret = svr.set_mount_point("/assets", "./assets");
 	ret = svr.set_mount_point("/data", "./data");
 
-    svr.listen("192.168.18.133", 1234);
+    svr.listen("192.168.1.5", 1234);
 }

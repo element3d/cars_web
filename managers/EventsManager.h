@@ -64,6 +64,7 @@ class EventsManager
 public:
     static EventsManager* Get();
     DBInception* GetInception();
+    DBInception* GetPitStop();
     void InceptionAddUser(int userId);
     void EventsSetUser(int userId, int eventId, const std::string& userJson);
     void EventsSetUserCard(int userId, int eventId, const std::string& cardJson);

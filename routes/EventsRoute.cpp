@@ -31,6 +31,26 @@ std::function<void(const httplib::Request &, httplib::Response &)> EventsRoute::
     };
 }
 
+std::function<void(const httplib::Request&, httplib::Response&)> EventsRoute::GetPitStop()
+{
+    return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+        DBInception* pI = EventsManager::Get()->GetPitStop();
+        if (!pI)
+        {
+            res.status = 404;
+            res.set_content("", "text/plain");
+            return;
+        }
+
+        res.status = 200;
+        res.set_content(pI->ToJson(), "text/plain");
+        delete pI;
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> EventsRoute::EventsSetUser()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {

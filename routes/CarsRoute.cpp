@@ -495,6 +495,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
         std::string jsonStr = buffer.GetString();
 
         res.set_content(jsonStr, "application/json");
+       // res.set_content(filename.c_str(), "text/plain");
 		res.status = 200;
 	};
 }

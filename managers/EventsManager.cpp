@@ -14,9 +14,24 @@ EventsManager* EventsManager::Get()
 
 DBInception* EventsManager::GetInception() 
 {
-    std::string sql = "select user_id, address, card from events_users where event_id = " + std::to_string(DB_INCEPTION_ID) + ";";
+    std::string sql = "select status from events where id = " + std::to_string(DB_INCEPTION_ID) + ";";
     PGconn* pg = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "Failed to get Inception status: %s", PQerrorMessage(pg));
+        PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pg);
+        return nullptr;
+    }
+    char* temp = (char*)calloc(256, sizeof(char));
+    DBInception* pI = new DBInception();
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    pI->Status = (EEventStatus)atoi(temp);
+    PQclear(res);
+
+    sql = "select user_id, address, card from events_users where event_id = " + std::to_string(DB_INCEPTION_ID) + ";";
+    res = PQexec(pg, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
     {
         fprintf(stderr, "Failed to get Inception user count: %s", PQerrorMessage(pg));
@@ -25,9 +40,8 @@ DBInception* EventsManager::GetInception()
         return nullptr;
     }
 
-    char* temp = (char*)calloc(256, sizeof(char));
+   // char* temp = (char*)calloc(256, sizeof(char));
 
-    DBInception* pI = new DBInception();
     int numUsers = PQntuples(res);
     for (int i = 0; i < numUsers; i++)
 	  {
@@ -44,8 +58,60 @@ DBInception* EventsManager::GetInception()
     free(temp);
     
     pI->NumUsers = numUsers;
-    pI->Status = EEventStatus::Started;
+    // pI->Status = EEventStatus::Started;
     pI->RemainingNumUsers = 10 - numUsers;
+    ConnectionPool::Get()->releaseConnection(pg);
+    return pI;
+}
+
+DBInception* EventsManager::GetPitStop()
+{
+    std::string sql = "select status from events where id = " + std::to_string(2) + ";";
+    PGconn* pg = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "Failed to get Inception status: %s", PQerrorMessage(pg));
+        PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pg);
+        return nullptr;
+    }
+    char* temp = (char*)calloc(256, sizeof(char));
+    DBInception* pI = new DBInception();
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    pI->Status = (EEventStatus)atoi(temp);
+    PQclear(res);
+
+    sql = "select user_id, address, card from events_users where event_id = " + std::to_string(2) + ";";
+    res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "Failed to get Inception user count: %s", PQerrorMessage(pg));
+        PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pg);
+        return nullptr;
+    }
+
+    // char* temp = (char*)calloc(256, sizeof(char));
+
+    int numUsers = PQntuples(res);
+    for (int i = 0; i < numUsers; i++)
+    {
+        EventUser u;
+        strcpy(temp, PQgetvalue(res, i, 0));
+        u.Id = atoi(temp);
+        strcpy(temp, PQgetvalue(res, i, 1));
+        u.Address = temp;
+        strcpy(temp, PQgetvalue(res, i, 2));
+        u.Card = temp;
+        pI->Users.push_back(u);
+    }
+
+    free(temp);
+
+    pI->NumUsers = numUsers;
+    // pI->Status = EEventStatus::Started;
+    pI->RemainingNumUsers = 100 - numUsers;
     ConnectionPool::Get()->releaseConnection(pg);
     return pI;
 }
@@ -58,6 +124,25 @@ void EventsManager::InceptionAddUser(int userId)
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
         fprintf(stderr, "Failed to add Inception user: %s", PQerrorMessage(pg));
+        PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pg);
+        return;
+    }
+
+    PQclear(res);
+    sql = "SELECT count(*) FROM events_users WHERE user_id=" + std::to_string(userId) + " AND event_id=" + std::to_string(DB_INCEPTION_ID) + ";";
+    res = PQexec(pg, sql.c_str());
+    char* temp = (char*)calloc(256, sizeof(char));
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    int numUsers = atoi(temp);
+    if (numUsers == 1) 
+    {
+        sql = "UPDATE events SET status = 2 WHERE id=" + std::to_string(DB_INCEPTION_ID) + ";";
+        PQclear(res);
+        res = PQexec(pg, sql.c_str());
+        PQclear(res);
+        sql = "UPDATE events SET status = 0 WHERE id=" + std::to_string(2) + ";";
+        res = PQexec(pg, sql.c_str());
     }
 
     PQclear(res);    
