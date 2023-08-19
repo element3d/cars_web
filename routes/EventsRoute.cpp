@@ -11,13 +11,92 @@ EventsRoute* EventsRoute::Get()
     return sInstance;
 }
 
+std::function<void(const httplib::Request &, httplib::Response &)> EventsRoute::GetEvents()
+{
+    return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+        std::vector<DBEvent*> events;
+        std::string token = req.get_header_value("Authentication");
+        int userId = -1;
+        try 
+        {
+            auto decoded = jwt::decode(token);
+            userId = decoded.get_payload_claim("id").as_int();
+
+        } 
+        catch(...) 
+        {
+
+        }
+        bool b = EventsManager::Get()->GetEvents(userId, events);
+        
+        rapidjson::Document d;
+        d.SetArray();
+        for (auto pEvent : events) 
+        {
+            rapidjson::Value e;
+            e.SetObject();
+            e.AddMember("id", pEvent->Id, d.GetAllocator());
+            e.AddMember("status", (int)pEvent->Status, d.GetAllocator());
+            e.AddMember("remaining", pEvent->RemainingNumUsers, d.GetAllocator());
+            e.AddMember("access", (int)pEvent->Access, d.GetAllocator());
+            
+            rapidjson::Value t;
+            t.SetString(pEvent->Title.c_str(), pEvent->Title.size(), d.GetAllocator());
+            e.AddMember("title", t, d.GetAllocator());
+
+            t.SetString(pEvent->Value1.c_str(), pEvent->Value1.size(), d.GetAllocator());
+            e.AddMember("value1", t, d.GetAllocator());
+
+            t.SetString(pEvent->Value2.c_str(), pEvent->Value2.size(), d.GetAllocator());
+            e.AddMember("value2", t, d.GetAllocator());
+
+            t.SetString(pEvent->Image.c_str(), pEvent->Image.size(), d.GetAllocator());
+            e.AddMember("image", t, d.GetAllocator());
+
+            rapidjson::Value users;
+            users.SetArray();
+
+            for (auto& user : pEvent->Users) 
+            {
+                rapidjson::Value u;
+                u.SetObject();
+                u.AddMember("id", user.Id, d.GetAllocator());
+                int awarded = user.Awarded;
+                if (awarded == 1 && user.Address.size()) awarded = 1;
+                else if (awarded == 1 && user.Card.size()) awarded = 10;
+                else if (awarded == 2 && user.Address.size()) awarded = 2;
+                else if (awarded == 2 && user.Card.size()) awarded = 20;
+
+                u.AddMember("awarded", awarded, d.GetAllocator());
+         
+                users.PushBack(u, d.GetAllocator());
+            }
+            e.AddMember("users", users, d.GetAllocator());
+
+            d.PushBack(e, d.GetAllocator());
+            delete pEvent;
+        }
+
+        rapidjson::StringBuffer buffer;
+        buffer.Clear();
+
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        d.Accept(writer);
+        res.status = 200;
+        res.set_content(buffer.GetString(), "text/plain");  
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> EventsRoute::GetInception()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {
         res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
         res.set_header("Access-Control-Allow-Origin", "*");
 
-        DBInception* pI = EventsManager::Get()->GetInception();
+        DBEvent* pI = EventsManager::Get()->GetInception();
         if (!pI) 
         {
             res.status = 404;
@@ -37,7 +116,20 @@ std::function<void(const httplib::Request&, httplib::Response&)> EventsRoute::Ge
         res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
         res.set_header("Access-Control-Allow-Origin", "*");
 
-        DBInception* pI = EventsManager::Get()->GetPitStop();
+        std::string token = req.get_header_value("Authentication");
+        int userId = -1;
+        try 
+        {
+            auto decoded = jwt::decode(token);
+            userId = decoded.get_payload_claim("id").as_int();
+
+        } 
+        catch(...) 
+        {
+
+        }
+
+        DBEvent* pI = EventsManager::Get()->GetPitStop(userId);
         if (!pI)
         {
             res.status = 404;

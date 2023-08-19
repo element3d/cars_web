@@ -13,15 +13,13 @@
 struct DBUser
 {
     int Id;
-    std::string Username;
     std::string Phone;
     std::string Password;
-	int Type;
-	std::string FirstName;
-	std::string SecondName;
+	  int Type;
+	  std::string FirstName;
     std::string Avatar;
-	int NumGolds;
-	float Reputation;
+	  int NumGolds;
+	  float Reputation;
 
     std::string ToJson(bool addNumGolds = false)
     {
@@ -30,19 +28,13 @@ struct DBUser
         d.AddMember("id", rapidjson::Value(Id), d.GetAllocator());
         rapidjson::Value p;
 
-        p.SetString(Username.c_str(), d.GetAllocator());
-        d.AddMember("username", p, d.GetAllocator());
-
         p.SetString(Phone.c_str(), d.GetAllocator());
         d.AddMember("phone", p, d.GetAllocator());
 
-		d.AddMember("type", rapidjson::Value(Type), d.GetAllocator());
+		    d.AddMember("type", rapidjson::Value(Type), d.GetAllocator());
 
-		p.SetString(FirstName.c_str(), d.GetAllocator());
-		d.AddMember("first_name", p, d.GetAllocator());
-
-		p.SetString(SecondName.c_str(), d.GetAllocator());
-		d.AddMember("second_name", p, d.GetAllocator());
+		    p.SetString(FirstName.c_str(), d.GetAllocator());
+		    d.AddMember("first_name", p, d.GetAllocator());
 
         p.SetString(Avatar.c_str(), d.GetAllocator());
         d.AddMember("avatar", p, d.GetAllocator());

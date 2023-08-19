@@ -367,28 +367,22 @@ DBUser* UserManager::GetUser(const std::string& username)
 	strcpy(temp, PQgetvalue(res, 0, 0));
 	pUser->Id = atoi(temp);
 
-  strcpy(temp, PQgetvalue(res, 0, 1));
-  pUser->Username = (temp);
-
-	strcpy(temp, PQgetvalue(res, 0, 2));
+	strcpy(temp, PQgetvalue(res, 0, 1));
 	pUser->Phone = (temp);
 
-	strcpy(temp, PQgetvalue(res, 0, 3));
+	strcpy(temp, PQgetvalue(res, 0, 2));
 	pUser->Password = (temp);
 
-	strcpy(temp, PQgetvalue(res, 0, 4));
+	strcpy(temp, PQgetvalue(res, 0, 3));
 	pUser->Type = atoi(temp);
 
-	strcpy(temp, PQgetvalue(res, 0, 5));
+	strcpy(temp, PQgetvalue(res, 0, 4));
 	pUser->FirstName = (temp);
 
-	strcpy(temp, PQgetvalue(res, 0, 6));
-	pUser->SecondName = (temp);
-
-  strcpy(temp, PQgetvalue(res, 0, 7));
+  strcpy(temp, PQgetvalue(res, 0, 5));
   pUser->Avatar = (temp);
 
-  strcpy(temp, PQgetvalue(res, 0, 8));
+  strcpy(temp, PQgetvalue(res, 0, 6));
   pUser->NumGolds = atoi(temp);
 
 
@@ -488,28 +482,22 @@ DBUser* UserManager::GetUser(int id)
 	strcpy(temp, PQgetvalue(res, 0, 0));
 	pUser->Id = atoi(temp);
 
-  strcpy(temp, PQgetvalue(res, 0, 1));
-  pUser->Username = (temp);
-
-	strcpy(temp, PQgetvalue(res, 0, 2));
+	strcpy(temp, PQgetvalue(res, 0, 1));
 	pUser->Phone = (temp);
 
-	strcpy(temp, PQgetvalue(res, 0, 3));
+	strcpy(temp, PQgetvalue(res, 0, 2));
 	pUser->Password = (temp);
 
-	strcpy(temp, PQgetvalue(res, 0, 4));
+	strcpy(temp, PQgetvalue(res, 0, 3));
 	pUser->Type = atoi(temp);
 
-	strcpy(temp, PQgetvalue(res, 0, 5));
+	strcpy(temp, PQgetvalue(res, 0, 4));
 	pUser->FirstName = (temp);
 
-	strcpy(temp, PQgetvalue(res, 0, 6));
-	pUser->SecondName = (temp);
-
-  strcpy(temp, PQgetvalue(res, 0, 7));
+  strcpy(temp, PQgetvalue(res, 0, 5));
   pUser->Avatar = (temp);
 
-  strcpy(temp, PQgetvalue(res, 0, 8));
+  strcpy(temp, PQgetvalue(res, 0, 6));
   pUser->NumGolds = atoi(temp);
 
 /*	strcpy(temp, PQgetvalue(res, 0, 6));

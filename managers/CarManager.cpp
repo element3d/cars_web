@@ -134,7 +134,7 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
         PQclear(res);
     }
 
-    DBInception* pI = EventsManager::Get()->GetInception();
+    DBEvent* pI = EventsManager::Get()->GetInception();
     bool found = false;
     if (pI->Status == EEventStatus::Started) 
     {
@@ -151,9 +151,30 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
       {
           EventsManager::Get()->InceptionAddUser(userId);
       }
+      delete pI;
     }
+    else 
+    {
+      delete pI;
+      pI = EventsManager::Get()->GetPitStop(userId);
+      if (pI->Status == EEventStatus::Started) 
+      {
+        for (auto u : pI->Users) 
+        { 
+          if (u.Id == userId) 
+          {
+            found = true;
+            break;
+          }
+        }
 
-    delete pI;
+        if (!found)
+        {
+            EventsManager::Get()->PitStopAddUser(userId);
+        }
+        delete pI;
+      }
+    }
 
     ConnectionPool::Get()->releaseConnection(pg);
 	return id;
@@ -410,7 +431,11 @@ int CarManager::GetTotalNumCars(const CarFilter& filter)
     std::string sql;
     sql = std::string("SELECT COUNT(*) FROM cars");
 
-    if (filter.Model != "all")
+  if (filter.SubModel != "all")
+    {
+        sql += " WHERE submodel='" + filter.SubModel + "'";
+    }
+    else if (filter.Model != "all")
     {
         sql += " WHERE model='" + filter.Model + "'";
     }
@@ -421,6 +446,82 @@ int CarManager::GetTotalNumCars(const CarFilter& filter)
     else if (filter.Make != "all")
     {
         sql += " WHERE make='" + filter.Make + "'";
+    }
+    else
+    {
+        sql += " WHERE make!=' '";
+    }
+
+
+    if (filter.Province >= 0)
+    {
+        sql += " AND province=" + std::to_string(filter.Province);
+    }
+    if (filter.PriceFrom >= 0)
+    {
+        sql += " AND price>=" + std::to_string(filter.PriceFrom);
+    }
+    if (filter.PriceTo >= 0)
+    {
+        sql += " AND price<=" + std::to_string(filter.PriceTo);
+    }
+
+    if (filter.YearFrom >= 0)
+    {
+        sql += " AND year>=" + std::to_string(filter.YearFrom);
+    }
+    if (filter.YearTo >= 0)
+    {
+        sql += " AND year<=" + std::to_string(filter.YearTo);
+    }
+
+    if (filter.BodyType >= 0)
+    {
+        sql += " AND body_type=" + std::to_string(filter.BodyType);
+    }
+    
+    if (filter.DriveType >= 0)
+    {
+        sql += " AND drive_type=" + std::to_string(filter.DriveType);
+    }
+    if (filter.EngineType >= 0)
+    {
+        sql += " AND engine_type=" + std::to_string(filter.EngineType);
+    }
+
+    if (filter.EngineSizeFrom >= 0)
+    {
+        sql += " AND engine_size>=" + std::to_string(filter.EngineSizeFrom);
+    }
+    if (filter.EngineSizeTo >= 0)
+    {
+        sql += " AND engine_size<=" + std::to_string(filter.EngineSizeTo);
+    }
+
+    if (filter.Transmission >= 0)
+    {
+        sql += " AND transmission=" + std::to_string(filter.Transmission);
+    }
+    if (filter.SteeringWheel >= 0)
+    {
+        sql += " AND stearing_wheel=" + std::to_string(filter.SteeringWheel);
+    }
+    if (filter.Color >= 0)
+    {
+        sql += " AND color=" + std::to_string(filter.Color);
+    }
+    if (filter.CustomsCleared >= 0)
+    {
+        sql += " AND customs_cleared=" + std::to_string(filter.CustomsCleared);
+    }
+    if (filter.Exchange > 0)
+    {
+        sql += " AND exchange=" + std::to_string(filter.Exchange);
+    }
+
+    if (filter.OnSale > 0)
+    {
+        sql += " AND on_sale=" + std::to_string(filter.OnSale);
     }
     sql += ";";
 

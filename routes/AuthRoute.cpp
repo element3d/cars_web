@@ -27,7 +27,6 @@ int sign_in(const std::string& username, const std::string& password, std::strin
     token = jwt::create()
         .set_issuer("auth0")
         .set_type("JWS")
-        .set_payload_claim("username", picojson::value(pUser->Username))
         .set_payload_claim("id", picojson::value(int64_t(pUser->Id)))
         .set_payload_claim("type", picojson::value(int64_t(pUser->Type)))
         .sign(jwt::algorithm::hs256{"secret"});
