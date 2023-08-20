@@ -18,15 +18,13 @@ UserManager* UserManager::Get()
     mPsql = pPsql;
 }*/
 
-int UserManager::CreateUser(const std::string& username, const std::string& phone, const std::string& password, int type, const std::string& firstName, const std::string& secondName)
+int UserManager::CreateUser(const std::string& phone, const std::string& password, int type, const std::string& firstName)
 {
-    std::string sql = "INSERT INTO users(username, phone, password, type, first_name, second_name, num_golds) VALUES ('"
-            + username + "', '"
+    std::string sql = "INSERT INTO users(phone, password, type, first_name, num_golds) VALUES ('"
             + phone + "', '" 
 			      + password + "', " 
 			      + std::to_string(type) + ", '"
 			      + firstName + "', '"
-            + secondName + "', '"
             + std::to_string(20) +
 			      "');";
 
@@ -309,7 +307,7 @@ DBGift* UserManager::GetUserGift(int id)
 bool UserManager::ChangePassword(const std::string& phone, const std::string& password)
 {
    std::string sql = "UPDATE USERS SET password = '"
-            + password + "' WHERE username = '" + phone + "';";
+            + password + "' WHERE phone = '" + phone + "';";
 
     PGconn* pg = ConnectionPool::Get()->getConnection();
 
@@ -437,9 +435,9 @@ DBUser* UserManager::GetUser(const std::string& username)
     return pUser;
 }
 
-bool UserManager::EditUser(int id, const std::string& firstName, const std::string& secondName, const std::string& phone)
+bool UserManager::EditUser(int id, const std::string& firstName, const std::string& phone)
 {
-    std::string sql = "UPDATE users SET first_name='" + firstName + "', second_name = '" + secondName + "', phone = '" + phone + "' WHERE id = "
+    std::string sql = "UPDATE users SET first_name='" + firstName + "', phone = '" + phone + "' WHERE id = "
             + std::to_string(id) + ";";
 
     PGconn* pg = ConnectionPool::Get()->getConnection();

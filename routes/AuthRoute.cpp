@@ -206,7 +206,6 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
         rapidjson::Document document;
         document.Parse(req.body.c_str());
 
-        std::string username = document["username"].GetString();
         std::string phone = document["phone"].GetString();
         std::string pwd = document["password"].GetString();
 
@@ -230,10 +229,10 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
            res.set_content("", "text/plain");
            return;
         }
-        int userId = UserManager::Get()->CreateUser(username, phone, pwd, type, firstName, "");
+        int userId = UserManager::Get()->CreateUser(phone, pwd, type, firstName);
 
         std::string token;
-        int status = sign_in(username, pwd, token);
+        int status = sign_in(phone, pwd, token);
 		    if (!token.size())
 		    {
           res.status = status;

@@ -79,9 +79,9 @@ public:
 
 //	void SetPG(PGconn* pPG);
 //    void SetPsql(pqxx::connection* pPsql);
-    int CreateUser(const std::string& username, const std::string& phone, const std::string& password, int type, const std::string& firstName, const std::string& secondName);
+    int CreateUser(const std::string& phone, const std::string& password, int type, const std::string& firstName);
     DBUser* GetUser(int id);
-    bool EditUser(int id, const std::string& firstName, const std::string& secondName, const std::string& phone);
+    bool EditUser(int id, const std::string& firstName, const std::string& phone);
     DBUser* GetUser(const std::string& username);
     bool ChangePassword(const std::string& phone, const std::string& password);
     int GetUserNumGolds(int id);
