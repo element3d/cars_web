@@ -9,7 +9,8 @@ class EventsRoute
 public:
 	  static EventsRoute* Get();
 
-		std::function<void(const httplib::Request &, httplib::Response &)> GetEvents();
+	  std::function<void(const httplib::Request &, httplib::Response &)> GetEvents();
+	  std::function<void(const httplib::Request&, httplib::Response&)> GetEventsNotes();
 	  std::function<void(const httplib::Request &, httplib::Response &)> GetInception();
 	  std::function<void(const httplib::Request&, httplib::Response&)> GetPitStop();
 	  std::function<void(const httplib::Request &, httplib::Response &)> EventsSetUser();

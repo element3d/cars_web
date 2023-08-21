@@ -90,6 +90,46 @@ std::function<void(const httplib::Request &, httplib::Response &)> EventsRoute::
     };
 }
 
+std::function<void(const httplib::Request&, httplib::Response&)> EventsRoute::GetEventsNotes()
+{
+    return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+        std::string token = req.get_header_value("Authentication");
+        int userId = -1;
+        try
+        {
+            auto decoded = jwt::decode(token);
+            userId = decoded.get_payload_claim("id").as_int();
+
+        }
+        catch (...)
+        {
+
+        }
+        std::vector<DBEvent*> events;
+        bool b = EventsManager::Get()->GetEvents(userId, events);
+
+        rapidjson::Document d;
+        d.SetObject();
+        int numNotes = 0;
+        for (auto pEvent : events)
+        {
+            if (pEvent->Status == EEventStatus::Started) numNotes++;
+        }
+        d.AddMember("events", numNotes, d.GetAllocator());
+
+        rapidjson::StringBuffer buffer;
+        buffer.Clear();
+
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        d.Accept(writer);
+        res.status = 200;
+        res.set_content(buffer.GetString(), "application/json");
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> EventsRoute::GetInception()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {
