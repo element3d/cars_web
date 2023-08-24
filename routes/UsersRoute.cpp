@@ -162,6 +162,40 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
     };
 }
 
+std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::MeUpdateCover()
+{
+    return [](const httplib::Request& req, httplib::Response& res) {
+
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+        std::string token = req.get_header_value("Authentication");
+        auto decoded = jwt::decode(token);
+
+        std::string userId = std::to_string(decoded.get_payload_claim("id").as_int());
+
+        httplib::MultipartFormData image_file = req.get_file_value("image_file");
+
+        std::string dataDir = "data";
+        // std::string dataDir = "/var/www/data";
+        if (!stlplus::folder_exists(dataDir)) stlplus::folder_create(dataDir);
+        std::string carsDir = dataDir + "/users";
+        if (!stlplus::folder_exists(carsDir)) stlplus::folder_create(carsDir);
+        std::string userDir = carsDir + "/" + userId;
+        if (!stlplus::folder_exists(userDir)) stlplus::folder_create(userDir);
+
+        std::string filename = userDir + "/cover.webp";
+
+
+        EImageContentType ct = EImageContentType::Jpeg;
+        if (image_file.content_type == std::string("image/webp")) ct = EImageContentType::Webp;
+        Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, ct);
+
+        UserManager::Get()->SetUserCover(atoi(userId.c_str()), std::string("data/users/") + userId + "/cover.webp");
+        res.status = 200;
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::UserEarnGold()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {

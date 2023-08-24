@@ -462,6 +462,7 @@ int main(void)
     svr.Get("/api/v1/me", UsersRoute::Get()->Me());
     svr.Post("/api/v1/me/avatar", UsersRoute::Get()->MeUploadAvatar());
     svr.Put("/api/v1/me/avatar", UsersRoute::Get()->MeUpdateAvatar());
+    svr.Put("/api/v1/me/cover", UsersRoute::Get()->MeUpdateCover());
     svr.Get("/api/v1/user", UsersRoute::Get()->GetUser());
     svr.Put("/api/v1/user", UsersRoute::Get()->EditUser());
     svr.Get("/api/v1/users/cars", UsersRoute::Get()->GetUserCars());
@@ -540,5 +541,5 @@ int main(void)
     auto ret = svr.set_mount_point("/assets", "./assets");
 	ret = svr.set_mount_point("/data", "./data");
 
-    svr.listen("192.168.1.5", 1234);
+    svr.listen("192.168.18.133", 1234);
 }

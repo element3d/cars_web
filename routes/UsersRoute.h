@@ -11,6 +11,7 @@ public:
     std::function<void(const httplib::Request &, httplib::Response &)> Me();
     std::function<void(const httplib::Request &, httplib::Response &)> MeUploadAvatar();
     std::function<void(const httplib::Request &, httplib::Response &)> MeUpdateAvatar();
+    std::function<void(const httplib::Request &, httplib::Response &)> MeUpdateCover();
     std::function<void(const httplib::Request &, httplib::Response &)> GetUser();
     std::function<void(const httplib::Request &, httplib::Response &)> EditUser();
     std::function<void(const httplib::Request &, httplib::Response &)> GetUserCars();

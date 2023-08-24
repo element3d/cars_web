@@ -18,6 +18,7 @@ struct DBUser
 	  int Type;
 	  std::string FirstName;
     std::string Avatar;
+    std::string Cover;
 	  int NumGolds;
 	  float Reputation;
 
@@ -38,6 +39,9 @@ struct DBUser
 
         p.SetString(Avatar.c_str(), d.GetAllocator());
         d.AddMember("avatar", p, d.GetAllocator());
+
+        p.SetString(Cover.c_str(), d.GetAllocator());
+        d.AddMember("cover", p, d.GetAllocator());
 
         if (addNumGolds)
             d.AddMember("num_golds", rapidjson::Value(NumGolds), d.GetAllocator());
@@ -94,7 +98,7 @@ public:
     bool UserReceiveGift(int giftId);
 
     bool SetUserAvatar(int userId, const std::string& avatarPath);
-
+    bool SetUserCover(int userId, const std::string& coverPath);
 
 private:
     static UserManager* sInstance;

@@ -383,7 +383,8 @@ DBUser* UserManager::GetUser(const std::string& username)
   strcpy(temp, PQgetvalue(res, 0, 6));
   pUser->NumGolds = atoi(temp);
 
-
+  strcpy(temp, PQgetvalue(res, 0, 7));
+  pUser->Cover = (temp);
     /*strcpy(temp, PQgetvalue(res, 0, 6));
 	pUser->NumGolds = atoi(temp);
 
@@ -498,6 +499,9 @@ DBUser* UserManager::GetUser(int id)
   strcpy(temp, PQgetvalue(res, 0, 6));
   pUser->NumGolds = atoi(temp);
 
+  strcpy(temp, PQgetvalue(res, 0, 7));
+  pUser->Cover = temp;
+
 /*	strcpy(temp, PQgetvalue(res, 0, 6));
 	pUser->NumGolds = atoi(temp);
 
@@ -534,6 +538,26 @@ DBUser* UserManager::GetUser(int id)
   ConnectionPool::Get()->releaseConnection(pConn);
 	free(temp);
   return pUser;
+}
+
+bool UserManager::SetUserCover(int userId, const std::string& coverPath)
+{
+    std::string sql = "UPDATE users SET cover = '" + coverPath + "' WHERE id = " + std::to_string(userId) + ";";
+    PGconn* pg = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    {
+        char* err = PQerrorMessage(pg);
+        fprintf(stderr, "Error: Failed to set user cover: %s", PQerrorMessage(pg));
+        PQclear(res);
+  
+        ConnectionPool::Get()->releaseConnection(pg);
+        return false;
+    }
+    PQclear(res);
+
+    ConnectionPool::Get()->releaseConnection(pg);
+    return true;
 }
 
 bool UserManager::SetUserAvatar(int userId, const std::string& avatarPath)
