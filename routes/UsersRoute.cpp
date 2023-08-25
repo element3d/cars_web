@@ -65,18 +65,17 @@ void Upload(void * data, int size, std::string fullPath, EImageContentType conte
     else
       d = stbi_load_from_memory((unsigned char*)data, size, &w, &h, &c, 0);
 
-    int nw = 400;
+    /*int nw = 400;
     int nh = int(400.f * h / w);
     unsigned char* dd = new unsigned char[nw* nh * c];
     avir :: CImageResizer<> ImageResizer( 8 );
-    ImageResizer.resizeImage( d, w, h, 0, dd, nw, nh, c, 0 );
+    ImageResizer.resizeImage( d, w, h, 0, dd, nw, nh, c, 0 );*/
 
-    WebPSave(dd, nw, nh, fullPath);
+    WebPSave(d, w, h, fullPath);
 
     // stbi_write_jpg(fullPath.c_str(), nw, nh, c, dd, 100);
     stbi_image_free(d);
-    delete[] dd;
-
+    // delete[] dd;
 }
 
 std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::MeUploadAvatar()
