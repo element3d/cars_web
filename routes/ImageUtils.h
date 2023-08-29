@@ -10,4 +10,4 @@ enum class EImageContentType
   Webp
 };
 
-void WebPSave(unsigned char* pData, int w, int h, const std::string& path);
+void WebPSave(unsigned char* pData, int w, int h, int c, const std::string& path);

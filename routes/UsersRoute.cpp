@@ -71,7 +71,7 @@ void Upload(void * data, int size, std::string fullPath, EImageContentType conte
     avir :: CImageResizer<> ImageResizer( 8 );
     ImageResizer.resizeImage( d, w, h, 0, dd, nw, nh, c, 0 );*/
 
-    WebPSave(d, w, h, fullPath);
+    WebPSave(d, w, h, c, fullPath);
 
     // stbi_write_jpg(fullPath.c_str(), nw, nh, c, dd, 100);
     stbi_image_free(d);

@@ -2,13 +2,13 @@
 
 ConnectionPool* ConnectionPool::sInstance = nullptr;
 
-PGconn* GetPQConnection()
+/*PGconn* ConnectionPool::Get()->getConnection()
 {
     PGconn* pg = PQconnectdb("host=127.0.0.1 port=5432 dbname=cars user=postgres password=Narek_28");
     return pg;
 }
 
-void CloseConnection(PGconn* pConn)
+void ConnectionPool::Get()->releaseConnection(PGconn* pConn)
 {
     PQfinish(pConn);
-}
+}*/

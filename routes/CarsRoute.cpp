@@ -339,13 +339,13 @@ void Upload(void * data, int size, std::string fullPath, std::string filename, E
     avir :: CImageResizer<> ImageResizer( 8 );
     ImageResizer.resizeImage( d, w, h, 0, dd, nw, nh, c, 0 );
 
-    WebPSave(dd, nw, nh, stlplus::folder_part(fullPath) + "/" + filename + ".webp");
+    WebPSave(dd, nw, nh, c, stlplus::folder_part(fullPath) + "/" + filename + ".webp");
 
     int aw = std::min(w, 2000);
     int ah = int(aw * h / w);
     unsigned char* ad = new unsigned char[aw* ah * c];
     ImageResizer.resizeImage( d, w, h, 0, ad, aw, ah, c, 0 );
-    WebPSave(ad, aw, ah, stlplus::folder_part(fullPath) + "/" + filename + "_orig.webp");
+    WebPSave(ad, aw, ah, c, stlplus::folder_part(fullPath) + "/" + filename + "_orig.webp");
 
     // stbi_write_jpg(std::string(stlplus::folder_part(fullPath) + "/" + filename + "_orig.jpg").c_str(), aw, ah, c, ad, 100);
     // stbi_write_jpg(fullPath.c_str(), nw, nh, c, dd, 100);

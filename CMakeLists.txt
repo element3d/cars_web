@@ -35,29 +35,36 @@ add_executable(cars_web
 	stlplus/wildcard.hpp
 	stlplus/wildcard.cpp
 
-    managers/UserManager.h
-    managers/UserManager.cpp
-    managers/CarManager.h
-    managers/CarManager.cpp
-    managers/AutoPartManager.h
-    managers/AutoPartManager.cpp
-    managers/PQManager.h
-    managers/PQManager.cpp
-    managers/ESerie.h
-    managers/ESerie.cpp
-    managers/EMake.h
-    managers/EMake.cpp
-    managers/EModel.h
-    managers/EModel.cpp
+  managers/UserManager.h
+  managers/UserManager.cpp
+  managers/CarManager.h
+  managers/CarManager.cpp
+  managers/AutoPartManager.h
+  managers/AutoPartManager.cpp
+  managers/EventsManager.h
+  managers/EventsManager.cpp
+  managers/PQManager.h
+  managers/PQManager.cpp
+  managers/ESerie.h
+  managers/ESerie.cpp
+  managers/EMake.h
+  managers/EMake.cpp
+  managers/EModel.h
+  managers/EModel.cpp
 
-    routes/AuthRoute.h
-    routes/AuthRoute.cpp
-    routes/UsersRoute.h
-    routes/UsersRoute.cpp
+  routes/AuthRoute.h
+  routes/AuthRoute.cpp
+  routes/UsersRoute.h
+  routes/UsersRoute.cpp
 	routes/CarsRoute.h
-    routes/CarsRoute.cpp
+  routes/CarsRoute.cpp
 	routes/AutoPartsRoute.h
-    routes/AutoPartsRoute.cpp
+  routes/AutoPartsRoute.cpp
+  routes/EventsRoute.h
+  routes/EventsRoute.cpp
+  routes/ImageUtils.h
+  routes/ImageUtils.cpp
+
 )
 
 add_executable(cron_main

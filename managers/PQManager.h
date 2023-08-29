@@ -9,7 +9,7 @@ class ConnectionPool {
 public:
     static ConnectionPool* Get() 
     {
-      if (!sInstance) sInstance = new ConnectionPool("host=127.0.0.1 port=5432 dbname=cars user=postgres password=Narek_28", 4);
+      if (!sInstance) sInstance = new ConnectionPool("host=127.0.0.1 port=5432 dbname=cars user=postgres password=Narek_28", 20);
       return sInstance;
     }
 
@@ -38,6 +38,9 @@ public:
         std::lock_guard<std::mutex> lock(mutex);
         if (!connections.empty()) {
             PGconn* conn = connections.back();
+            if (!conn) {
+            printf("asdf");
+            }
             connections.pop_back();
             return conn;
         }
@@ -59,7 +62,7 @@ private:
     static ConnectionPool* sInstance;
 };
 
-PGconn* GetPQConnection();
-void CloseConnection(PGconn* pConn);
+/*PGconn* ConnectionPool::Get()->getConnection();
+void ConnectionPool::Get()->releaseConnection(PGconn* pConn);*/
 
 #endif // __PQ_MANAGER__
