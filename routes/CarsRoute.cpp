@@ -483,8 +483,8 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
         rapidjson::Value v;
         v.SetInt(id);
         d.AddMember("id", v, d.GetAllocator());
-	std::string url = "data/cars/";
-	url += rn + ".webp";
+      	std::string url = "data/cars/" + std::to_string(userId) + "/"  + carId + "/";
+	      url += rn + ".webp";
         v.SetString(url.c_str(), url.size(), d.GetAllocator());
         d.AddMember("uri", v, d.GetAllocator());
 
