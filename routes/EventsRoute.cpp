@@ -2,6 +2,7 @@
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
 #include <jwt-cpp/jwt.h>
+#include "../managers/UserManager.h"
 
 EventsRoute* EventsRoute::sInstance = nullptr;
 
@@ -9,6 +10,11 @@ EventsRoute* EventsRoute::Get()
 {
     if (!sInstance) sInstance = new EventsRoute();
     return sInstance;
+}
+
+EventsRoute::EventsRoute() 
+{
+    mChosenUsers = { "98828482" };
 }
 
 std::function<void(const httplib::Request &, httplib::Response &)> EventsRoute::GetEvents()
@@ -20,11 +26,12 @@ std::function<void(const httplib::Request &, httplib::Response &)> EventsRoute::
         std::vector<DBEvent*> events;
         std::string token = req.get_header_value("Authentication");
         int userId = -1;
+        DBUser* pMe = nullptr;
         try 
         {
             auto decoded = jwt::decode(token);
             userId = decoded.get_payload_claim("id").as_int();
-
+            pMe = UserManager::Get()->GetUser(userId);
         } 
         catch(...) 
         {
@@ -34,12 +41,22 @@ std::function<void(const httplib::Request &, httplib::Response &)> EventsRoute::
         
         rapidjson::Document d;
         d.SetArray();
+
+        bool chosen = false;
+        if (pMe) 
+        {
+          auto it = std::find(mChosenUsers.begin(), mChosenUsers.end(), pMe->Phone);
+          if (it != mChosenUsers.end()) chosen = true;
+        }
+
         for (auto pEvent : events) 
         {
+            EEventStatus status = chosen && (pEvent->Id == 1 || pEvent->Id == 2) ? EEventStatus::Finished : pEvent->Status;
+            
             rapidjson::Value e;
             e.SetObject();
             e.AddMember("id", pEvent->Id, d.GetAllocator());
-            e.AddMember("status", (int)pEvent->Status, d.GetAllocator());
+            e.AddMember("status", (int)status, d.GetAllocator());
             e.AddMember("remaining", pEvent->RemainingNumUsers, d.GetAllocator());
             e.AddMember("access", (int)pEvent->Access, d.GetAllocator());
             
@@ -98,11 +115,12 @@ std::function<void(const httplib::Request&, httplib::Response&)> EventsRoute::Ge
 
         std::string token = req.get_header_value("Authentication");
         int userId = -1;
+        DBUser* pMe = nullptr;
         try
         {
             auto decoded = jwt::decode(token);
             userId = decoded.get_payload_claim("id").as_int();
-
+            pMe = UserManager::Get()->GetUser(userId);
         }
         catch (...)
         {
@@ -111,11 +129,20 @@ std::function<void(const httplib::Request&, httplib::Response&)> EventsRoute::Ge
         std::vector<DBEvent*> events;
         bool b = EventsManager::Get()->GetEvents(userId, events);
 
+        
+        bool chosen = false;
+        if (pMe) 
+        {
+          auto it = std::find(mChosenUsers.begin(), mChosenUsers.end(), pMe->Phone);
+          if (it != mChosenUsers.end()) chosen = true;
+        }
+
         rapidjson::Document d;
         d.SetObject();
         int numNotes = 0;
         for (auto pEvent : events)
         {
+            if (chosen && (pEvent->Id == 1 || pEvent->Id == 2)) continue;
             if (pEvent->Status == EEventStatus::Started) numNotes++;
         }
         d.AddMember("events", numNotes, d.GetAllocator());

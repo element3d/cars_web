@@ -136,7 +136,8 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
 
     DBEvent* pI = EventsManager::Get()->GetInception();
     bool found = false;
-    if (pI->Status == EEventStatus::Started) 
+    int numCars = GetNumCars(userId);
+    if (numCars <= 1 && pI->Status == EEventStatus::Started) 
     {
       for (auto u : pI->Users) 
       { 
@@ -153,7 +154,7 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
       }
       delete pI;
     }
-    else 
+    else if (numCars <= 1)
     {
       delete pI;
       pI = EventsManager::Get()->GetPitStop(userId);
@@ -763,6 +764,33 @@ void CarManager::GetNumCars(const std::string& make, std::vector<int>& outCounts
         PQclear(res);
     }
     ConnectionPool::Get()->releaseConnection(mPG);
+}
+
+int CarManager::GetNumCars(int userId)
+{
+    PGconn* mPG = ConnectionPool::Get()->getConnection();
+    
+    std::string sql = "SELECT COUNT(*) FROM cars WHERE user_id="
+        + std::to_string(userId) + ";";
+
+    PGresult* res = PQexec(mPG, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        char* err = PQerrorMessage(mPG);
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(mPG));
+        PQclear(res);
+        //exit_nicely(conn);
+        ConnectionPool::Get()->releaseConnection(mPG);
+        return -1;
+    }
+    char* temp = (char*)calloc(256, sizeof(char));
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    int count = atoi(temp);
+    free(temp);
+    PQclear(res);
+    
+    ConnectionPool::Get()->releaseConnection(mPG);
+    return count;
 }
 
 void CarManager::GetNumCars(std::vector<int>& outCounts)

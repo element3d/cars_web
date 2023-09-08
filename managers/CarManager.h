@@ -113,6 +113,7 @@ public:
     DBCar* GetCar(int carId);
     void GetCars(const CarFilter& filter, int page, std::vector<DBCar*>& cars);
     int GetTotalNumCars(const CarFilter& filter);
+    int GetNumCars(int userId);
     void GetNumCars(std::vector<int>& outCounts);
     void GetNumCars(const std::string& make, std::vector<int>& outCounts);
     void GetNumCarsBySerie(const std::string& serie, std::vector<int>& outCounts);

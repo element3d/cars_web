@@ -8,6 +8,7 @@ class EventsRoute
 {
 public:
 	  static EventsRoute* Get();
+		EventsRoute();
 
 	  std::function<void(const httplib::Request &, httplib::Response &)> GetEvents();
 	  std::function<void(const httplib::Request&, httplib::Response&)> GetEventsNotes();
@@ -18,6 +19,7 @@ public:
 
 private:
 	static EventsRoute* sInstance;
+	std::vector<std::string> mChosenUsers;
 };
 
 #endif // __EVENTS_ROUTE__
