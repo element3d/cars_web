@@ -1047,6 +1047,9 @@ bool CarManager::_ParseGPResult(PGresult* res, std::vector<DBCar*>& cars)
     strcpy(temp, PQgetvalue(res, i, 27));
     pCar->RefreshTs = std::strtoull(temp, nullptr, 10);
 
+    strcpy(temp, PQgetvalue(res, i, 29));
+    pCar->Views = atoi(temp);
+
     pCar->Rank = GetCarStars(pCar->Id);
 
 		{
@@ -1207,6 +1210,15 @@ int CarManager::AddCarImage(int carId, const std::string& imagePath)
     free(temp);
     ConnectionPool::Get()->releaseConnection(pConn);
     return id;
+}
+
+void CarManager::AddView(int carId)
+{
+    PGconn* mPG = ConnectionPool::Get()->getConnection();
+    std::string sql = "UPDATE cars SET views = views + 1 WHERE id = " + std::to_string(carId) + ";";
+    PGresult* res = PQexec(mPG, sql.c_str());
+    PQclear(res);
+    ConnectionPool::Get()->releaseConnection(mPG);
 }
 
 int CarManager::GetCarUserVoteStars(int carId, int userId)

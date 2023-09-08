@@ -50,6 +50,7 @@ struct DBCar
     int OnTop;
     uint64_t  RefreshTs;
     int Rank;
+    int Views;
 };
 
 struct CarFilter
@@ -127,6 +128,7 @@ public:
     bool UpdateCarStars(int userId, int carId, int numStars);
     int GetCarStars(int carId);
     int GetCarUserVoteStars(int carId, int userId);
+    void AddView(int carId);
     void Refresh(int carId);
     void RequestModel(int userId, const std::string& msg);
     void ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::string& json);

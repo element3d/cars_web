@@ -24,6 +24,7 @@ public:
     std::function<void(const httplib::Request &, httplib::Response &)> CarsUpdateStars();
     std::function<void(const httplib::Request &, httplib::Response &)> CarsGetStars();
     std::function<void(const httplib::Request &, httplib::Response &)> CarsGetUserVoteStars();
+    std::function<void(const httplib::Request &, httplib::Response &)> CarsAddView();
     std::function<void(const httplib::Request &, httplib::Response &)> CarsRefresh();
     std::function<void(const httplib::Request &, httplib::Response &)> CarsRequestModel();
 

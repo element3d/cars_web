@@ -539,6 +539,22 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
     };
 }
 
+std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsAddView()
+{
+    return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+        std::string carId = req.get_param_value("car_id", 0).c_str();
+    
+        CarManager::Get()->AddView(atoi(carId.c_str()));
+        //for(auto& e : decoded.get_payload_claims())
+        //  std::cout << e.first << " = " << e.second << std::endl;
+
+        res.status = 200;
+        res.set_content("OK", "text/plain");
+    };
+}
 
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsGetUserVoteStars()
 {
@@ -793,6 +809,9 @@ void CarsRoute::ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::st
 
     v.SetInt(pCar->Rank);
     o.AddMember("rank", v, d.GetAllocator());
+
+    v.SetInt(pCar->Views);
+    o.AddMember("views", v, d.GetAllocator());
 
 		v.SetArray();
 		for (auto& i : pCar->Images)
