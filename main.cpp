@@ -495,6 +495,7 @@ int main(void)
     svr.Post("/api/v1/cars/req_model", CarsRoute::Get()->CarsRequestModel());
 
     svr.Get("/api/v1/events", EventsRoute::Get()->GetEvents());
+    svr.Get("/api/v1/events/recent", EventsRoute::Get()->GetRecentEvent());
     svr.Get("/api/v1/events/notes", EventsRoute::Get()->GetEventsNotes());
     svr.Get("/api/v1/events/inception", EventsRoute::Get()->GetInception());
     svr.Get("/api/v1/events/pit_stop", EventsRoute::Get()->GetPitStop());

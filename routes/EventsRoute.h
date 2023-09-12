@@ -11,6 +11,7 @@ public:
 		EventsRoute();
 
 	  std::function<void(const httplib::Request &, httplib::Response &)> GetEvents();
+		std::function<void(const httplib::Request &, httplib::Response &)> GetRecentEvent();
 	  std::function<void(const httplib::Request&, httplib::Response&)> GetEventsNotes();
 	  std::function<void(const httplib::Request &, httplib::Response &)> GetInception();
 	  std::function<void(const httplib::Request&, httplib::Response&)> GetPitStop();

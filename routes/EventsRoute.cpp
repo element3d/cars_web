@@ -107,6 +107,161 @@ std::function<void(const httplib::Request &, httplib::Response &)> EventsRoute::
     };
 }
 
+std::function<void(const httplib::Request&, httplib::Response&)> EventsRoute::GetRecentEvent() 
+{
+   return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+        std::string token = req.get_header_value("Authentication");
+        int userId = -1;
+        DBUser* pMe = nullptr;
+        try
+        {
+            auto decoded = jwt::decode(token);
+            userId = decoded.get_payload_claim("id").as_int();
+            pMe = UserManager::Get()->GetUser(userId);
+        }
+        catch (...)
+        {
+
+        }
+        std::vector<DBEvent*> events;
+        bool b = EventsManager::Get()->GetEvents(userId, events);
+
+        
+        bool chosen = false;
+        if (pMe) 
+        {
+          auto it = std::find(mChosenUsers.begin(), mChosenUsers.end(), pMe->Phone);
+          if (it != mChosenUsers.end()) chosen = true;
+        }
+
+        rapidjson::Document d;
+        d.SetObject();
+        for (auto pEvent : events)
+        {
+            if (chosen && (pEvent->Id == 1 || pEvent->Id == 2)) continue;
+            if (pEvent->Status == EEventStatus::NotStarted || pEvent->Access != EEventAccess::Allowed) continue;
+
+            if (pEvent->Status == EEventStatus::Started) 
+            {
+              EEventStatus status = chosen && (pEvent->Id == 1 || pEvent->Id == 2) ? EEventStatus::Finished : pEvent->Status;
+            
+              d.AddMember("id", pEvent->Id, d.GetAllocator());
+              d.AddMember("status", (int)status, d.GetAllocator());
+              d.AddMember("remaining", pEvent->RemainingNumUsers, d.GetAllocator());
+              d.AddMember("access", (int)pEvent->Access, d.GetAllocator());
+            
+              rapidjson::Value t;
+              t.SetString(pEvent->Title.c_str(), pEvent->Title.size(), d.GetAllocator());
+              d.AddMember("title", t, d.GetAllocator());
+
+              t.SetString(pEvent->Value1.c_str(), pEvent->Value1.size(), d.GetAllocator());
+              d.AddMember("value1", t, d.GetAllocator());
+
+              t.SetString(pEvent->Value2.c_str(), pEvent->Value2.size(), d.GetAllocator());
+              d.AddMember("value2", t, d.GetAllocator());
+
+              t.SetString(pEvent->Image.c_str(), pEvent->Image.size(), d.GetAllocator());
+              d.AddMember("image", t, d.GetAllocator());
+
+              rapidjson::Value users;
+              users.SetArray();
+
+              for (auto& user : pEvent->Users) 
+              {
+                  rapidjson::Value u;
+                  u.SetObject();
+                  u.AddMember("id", user.Id, d.GetAllocator());
+                  int awarded = user.Awarded;
+                  if (awarded == 1 && user.Address.size()) awarded = 1;
+                  else if (awarded == 1 && user.Card.size()) awarded = 10;
+                  else if (awarded == 2 && user.Address.size()) awarded = 2;
+                  else if (awarded == 2 && user.Card.size()) awarded = 20;
+
+                  u.AddMember("awarded", awarded, d.GetAllocator());
+         
+                  users.PushBack(u, d.GetAllocator());
+              }
+              d.AddMember("users", users, d.GetAllocator());
+
+              delete pEvent;
+
+               rapidjson::StringBuffer buffer;
+              buffer.Clear();
+
+              rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+              d.Accept(writer);
+              res.status = 200;
+              res.set_content(buffer.GetString(), "application/json");
+              return;
+            }
+            else if (pEvent->Status == EEventStatus::Finished) 
+            {
+                for (auto& user : pEvent->Users) 
+                {
+                  if (user.Id == userId && user.Awarded == 0) 
+                  {
+                      EEventStatus status = chosen && (pEvent->Id == 1 || pEvent->Id == 2) ? EEventStatus::Finished : pEvent->Status;
+                      d.AddMember("id", pEvent->Id, d.GetAllocator());
+                      d.AddMember("status", (int)status, d.GetAllocator());
+                      d.AddMember("remaining", pEvent->RemainingNumUsers, d.GetAllocator());
+                      d.AddMember("access", (int)pEvent->Access, d.GetAllocator());
+            
+                      rapidjson::Value t;
+                      t.SetString(pEvent->Title.c_str(), pEvent->Title.size(), d.GetAllocator());
+                      d.AddMember("title", t, d.GetAllocator());
+
+                      t.SetString(pEvent->Value1.c_str(), pEvent->Value1.size(), d.GetAllocator());
+                      d.AddMember("value1", t, d.GetAllocator());
+
+                      t.SetString(pEvent->Value2.c_str(), pEvent->Value2.size(), d.GetAllocator());
+                      d.AddMember("value2", t, d.GetAllocator());
+
+                      t.SetString(pEvent->Image.c_str(), pEvent->Image.size(), d.GetAllocator());
+                      d.AddMember("image", t, d.GetAllocator());
+
+                      rapidjson::Value users;
+                      users.SetArray();
+
+                      for (auto& user : pEvent->Users) 
+                      {
+                          rapidjson::Value u;
+                          u.SetObject();
+                          u.AddMember("id", user.Id, d.GetAllocator());
+                          int awarded = user.Awarded;
+                          if (awarded == 1 && user.Address.size()) awarded = 1;
+                          else if (awarded == 1 && user.Card.size()) awarded = 10;
+                          else if (awarded == 2 && user.Address.size()) awarded = 2;
+                          else if (awarded == 2 && user.Card.size()) awarded = 20;
+
+                          u.AddMember("awarded", awarded, d.GetAllocator());
+         
+                          users.PushBack(u, d.GetAllocator());
+                      }
+                      d.AddMember("users", users, d.GetAllocator());
+
+                      delete pEvent;
+
+                      rapidjson::StringBuffer buffer;
+                      buffer.Clear();
+
+                      rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+                      d.Accept(writer);
+                      res.status = 200;
+                      res.set_content(buffer.GetString(), "application/json");
+                      return;
+                  }
+                }
+            }
+        }
+      
+        res.status = 404;
+        res.set_content("OK", "application/json");
+   };
+}
+
 std::function<void(const httplib::Request&, httplib::Response&)> EventsRoute::GetEventsNotes()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {
