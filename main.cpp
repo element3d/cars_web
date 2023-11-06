@@ -19,6 +19,7 @@
 #include "routes/CarsRoute.h"
 #include "routes/AutoPartsRoute.h"
 #include "routes/EventsRoute.h"
+#include "routes/MessagesRoute.h"
 
 using namespace httplib;
 using namespace std;
@@ -475,17 +476,17 @@ int main(void)
     svr.Get("/api/v1/users/gifts", UsersRoute::Get()->UserGetGifts());
     svr.Post("/api/v1/users/gifts/receive", UsersRoute::Get()->UserReceiveGift());
 
-	  svr.Get("/api/v1/my_cars", CarsRoute::Get()->MyCars());
-	  svr.Get("/api/v1/top_cars", CarsRoute::Get()->TopCars());
+	svr.Get("/api/v1/my_cars", CarsRoute::Get()->MyCars());
+	svr.Get("/api/v1/top_cars", CarsRoute::Get()->TopCars());
     svr.Get("/api/v1/cars/count", CarsRoute::Get()->NumCars());
     svr.Get("/api/v1/car", CarsRoute::Get()->CarGet());
-	  svr.Get("/api/v1/cars", CarsRoute::Get()->CarsGet());
-	  svr.Post("/api/v1/cars", CarsRoute::Get()->CarsPost());
+	svr.Get("/api/v1/cars", CarsRoute::Get()->CarsGet());
+	svr.Post("/api/v1/cars", CarsRoute::Get()->CarsPost());
     svr.Put("/api/v1/cars", CarsRoute::Get()->CarsPut());
     svr.Delete("/api/v1/cars", CarsRoute::Get()->CarsDelete());
-	  svr.Post("/api/v1/cars/avatar", CarsRoute::Get()->CarsUploadAvatar());
+	svr.Post("/api/v1/cars/avatar", CarsRoute::Get()->CarsUploadAvatar());
     svr.Put("/api/v1/cars/avatar", CarsRoute::Get()->CarsSetAvatar());
-	  svr.Post("/api/v1/cars/image", CarsRoute::Get()->CarsUploadImage());
+	svr.Post("/api/v1/cars/image", CarsRoute::Get()->CarsUploadImage());
     svr.Delete("/api/v1/cars/image", CarsRoute::Get()->CarsDeleteImage());
     svr.Put("/api/v1/cars/stars", CarsRoute::Get()->CarsUpdateStars());
     svr.Get("/api/v1/cars/stars", CarsRoute::Get()->CarsGetStars());
@@ -502,7 +503,10 @@ int main(void)
     svr.Post("/api/v1/events/user", EventsRoute::Get()->EventsSetUser());
     svr.Post("/api/v1/events/user_card", EventsRoute::Get()->EventsSetUserCard());
 
-	  svr.Get("/api/v1/my_auto_parts", AutoPartsRoute::Get()->MyAutoParts());
+    svr.Get("/api/v1/messages", MessagesRoute::Get()->MessagesGet());
+    svr.Post("/api/v1/messages", MessagesRoute::Get()->MessagesPost());
+
+	svr.Get("/api/v1/my_auto_parts", AutoPartsRoute::Get()->MyAutoParts());
     svr.Post("/api/v1/auto_part", AutoPartsRoute::Get()->AutoPartPost());
     svr.Get("/api/v1/auto_part", AutoPartsRoute::Get()->AutoPartGet());
     svr.Delete("/api/v1/auto_part", AutoPartsRoute::Get()->AutoPartDelete());
@@ -513,10 +517,10 @@ int main(void)
     svr.Get("/api/v1/auto_parts/notifications", AutoPartsRoute::Get()->AutoPartsGetNotifications());
     svr.Get("/api/v1/auto_parts/notification", AutoPartsRoute::Get()->AutoPartsGetNotification());
     svr.Delete("/api/v1/auto_parts/notification", AutoPartsRoute::Get()->AutoPartsDeleteNotification());
-	  svr.Post("/api/v1/auto_parts", AutoPartsRoute::Get()->AutoPartsPost());
-	  svr.Get("/api/v1/top_auto_parts", AutoPartsRoute::Get()->TopAutoParts());
-	  svr.Post("/api/v1/auto_parts/avatar", AutoPartsRoute::Get()->AutoPartsUploadAvatar());
-	  svr.Post("/api/v1/auto_parts/image", AutoPartsRoute::Get()->AutoPartsUploadImage());
+	svr.Post("/api/v1/auto_parts", AutoPartsRoute::Get()->AutoPartsPost());
+	svr.Get("/api/v1/top_auto_parts", AutoPartsRoute::Get()->TopAutoParts());
+	svr.Post("/api/v1/auto_parts/avatar", AutoPartsRoute::Get()->AutoPartsUploadAvatar());
+	svr.Post("/api/v1/auto_parts/image", AutoPartsRoute::Get()->AutoPartsUploadImage());
 
     svr.Post("/post", [](const Request &req, Response &res) {
 		req.params;

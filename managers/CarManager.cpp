@@ -1441,6 +1441,9 @@ void CarManager::ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::s
         v.SetInt(pCar->Rank);
         o.AddMember("rank", v, d.GetAllocator());
 
+         v.SetInt(pCar->Views);
+        o.AddMember("views", v, d.GetAllocator());
+
 		v.SetArray();
 		for (auto& i : pCar->Images)
 		{

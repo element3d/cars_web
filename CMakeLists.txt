@@ -51,6 +51,8 @@ add_executable(cars_web
   managers/EMake.cpp
   managers/EModel.h
   managers/EModel.cpp
+  managers/MessagesManager.h
+  managers/MessagesManager.cpp
 
   routes/AuthRoute.h
   routes/AuthRoute.cpp
@@ -64,6 +66,8 @@ add_executable(cars_web
   routes/EventsRoute.cpp
   routes/ImageUtils.h
   routes/ImageUtils.cpp
+  routes/MessagesRoute.h
+  routes/MessagesRoute.cpp
 
 )
 
