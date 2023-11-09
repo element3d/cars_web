@@ -37,7 +37,24 @@ bool MessagesManager::MessagesGet(int from, int to, rapidjson::Document& d)
     PQclear(res);
     // free(temp);
 
-    sql = "SELECT * FROM messages WHERE conv_id = " + std::to_string(id) + ";";
+    {
+        using namespace std::chrono;
+        uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+        sql = std::string("UPDATE MESSAGES SET status = 1 ")// AND msg_ts = " + std::to_string(ms) 
+            + "WHERE from_user_id = " + std::to_string(to) 
+            + " AND to_user_id = " + std::to_string(from) + " AND status = 0;";
+
+        PGresult* res = PQexec(pConn, sql.c_str());
+	    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	    {
+            fprintf(stderr, "Get messages failed: %s", PQerrorMessage(pConn));
+		    PQclear(res);
+           // ConnectionPool::Get()->releaseConnection(pConn);
+            // return false;
+        }
+    }
+
+    sql = "SELECT * FROM messages WHERE conv_id = " + std::to_string(id) + " ORDER BY msg_ts ASC;";
     res = PQexec(pConn, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
@@ -208,6 +225,30 @@ bool MessagesManager::ConversationsGet(int from, rapidjson::Document& d)
         av.SetString(avatar.c_str(), d.GetAllocator());
         v.AddMember("first_name", fnv, d.GetAllocator());
         v.AddMember("avatar", av, d.GetAllocator());
+
+        // get last message
+        sql = "select msg, status, msg_type, msg_ts from messages where conv_id = "
+            + std::to_string(convId) + " order by msg_ts DESC limit 1;";
+        PGresult* pMsgRes = PQexec(pConn, sql.c_str());
+        int msgCount = PQntuples(pMsgRes);
+        if (msgCount) 
+        {
+            strcpy(temp, PQgetvalue(pMsgRes, 0, 0));
+	    	std::string msg = temp;
+            rapidjson::Value mv;
+            mv.SetString(msg.c_str(), d.GetAllocator());
+            v.AddMember("msg", mv, d.GetAllocator());
+
+            strcpy(temp, PQgetvalue(pMsgRes, 0, 1));
+            v.AddMember("msg_status", atoi(temp), d.GetAllocator());
+
+            strcpy(temp, PQgetvalue(pMsgRes, 0, 2));
+            v.AddMember("msg_type", atoi(temp), d.GetAllocator());
+
+            strcpy(temp, PQgetvalue(pMsgRes, 0, 3));
+            v.AddMember("msg_ts", atoi(temp), d.GetAllocator());
+        }
+        
         d.PushBack(v, d.GetAllocator());
     }
     ConnectionPool::Get()->releaseConnection(pConn);
