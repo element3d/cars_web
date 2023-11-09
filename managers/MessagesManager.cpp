@@ -82,6 +82,14 @@ bool MessagesManager::MessagesGet(int from, int to, rapidjson::Document& d)
 		int status = atoi(temp);
         v.AddMember("status", status, d.GetAllocator());
 
+        strcpy(temp, PQgetvalue(res, i, 6));
+		int type = atoi(temp);
+        v.AddMember("type", type, d.GetAllocator());
+
+        strcpy(temp, PQgetvalue(res, i, 7));
+		long long ts = atoll(temp);
+        v.AddMember("ts", ts, d.GetAllocator());
+
         vMessages.PushBack(v, d.GetAllocator());
     }
     d.AddMember("messages", vMessages, d.GetAllocator());
@@ -91,7 +99,7 @@ bool MessagesManager::MessagesGet(int from, int to, rapidjson::Document& d)
     return true;
 }
 
-int MessagesManager::MessagesPost(int convId, int from, int to, const std::string& msg)
+int MessagesManager::MessagesPost(int convId, int from, int to, const std::string& msg, int type)
 {
     PGconn* pConn = ConnectionPool::Get()->getConnection();
     int newConvId = convId;
@@ -100,34 +108,129 @@ int MessagesManager::MessagesPost(int convId, int from, int to, const std::strin
         newConvId = _CreateConversation(from, to);
     }
 
-    std::string sql = "INSERT INTO messages(conv_id, from_user_id, to_user_id, msg, status) VALUES ("
+    using namespace std::chrono;
+    uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+
+    std::string sql = "INSERT INTO messages(conv_id, from_user_id, to_user_id, msg, msg_type, status, msg_ts) VALUES ("
 	    + std::to_string(newConvId) + ", "
 	    + std::to_string(from) + ", "
         + std::to_string(to) + ", '"
         + msg + "', "
-        + std::to_string(0)
-	    + ");";
+        + std::to_string(type) + ", "
+        + std::to_string(0) + ", "
+        + std::to_string(ms)
+	    + ") RETURNING id;";
 
     PGresult* res = PQexec(pConn, sql.c_str());
-	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
         fprintf(stderr, "Create message failed: %s", PQerrorMessage(pConn));
 		PQclear(res);
         ConnectionPool::Get()->releaseConnection(pConn);
         return -1;
 	}
+    char* temp = (char*)calloc(256, sizeof(char));
+    int rec_count = PQntuples(res);
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    int id = atoi(temp);
     PQclear(res);
     ConnectionPool::Get()->releaseConnection(pConn);
-    return newConvId;
+    return id;
     
+}
+
+void MessagesManager::MessagesSetImage(int msgId, const std::string& imagePath)
+{
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    std::string sql = "UPDATE messages set msg = '" + imagePath + "' WHERE id = " + std::to_string(msgId) + ";";
+    PGresult* res = PQexec(pConn, sql.c_str());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    {
+        fprintf(stderr, "Update message image failed: %s", PQerrorMessage(pConn));
+	    PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return;
+    }
+
+    PQclear(res);
+    ConnectionPool::Get()->releaseConnection(pConn);
+}
+
+bool MessagesManager::ConversationsGet(int from, rapidjson::Document& d)
+{
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    std::string sql = "SELECT * from conversations where user1 = " + std::to_string(from) 
+        + " OR user2 = " + std::to_string(from) + " ORDER BY create_ts DESC;";
+
+    PGresult* res = PQexec(pConn, sql.c_str());
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+        fprintf(stderr, "Get conversations failed: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return -1;
+	}
+
+    char* temp = (char*)calloc(256, sizeof(char));
+    int rec_count = PQntuples(res);
+
+    d.SetArray();
+    for (int i = 0; i < rec_count; i++)
+	{
+        strcpy(temp, PQgetvalue(res, i, 0));
+		int convId = atoi(temp);
+
+        strcpy(temp, PQgetvalue(res, i, 1));
+		int user1 = atoi(temp);
+
+        strcpy(temp, PQgetvalue(res, i, 2));
+		int user2 = atoi(temp);
+
+        int userId;
+        if (from == user1) userId = user2;
+        else userId = user1;
+        sql = "SELECT first_name, avatar from users WHERE id = " + std::to_string(userId) + ";";
+        PGresult* pUsersRes = PQexec(pConn, sql.c_str());
+        strcpy(temp, PQgetvalue(pUsersRes, 0, 0));
+		std::string firstName = temp;
+
+        strcpy(temp, PQgetvalue(pUsersRes, 0, 1));
+		std::string avatar = temp;
+        PQclear(pUsersRes);
+
+        rapidjson::Value v;
+        v.SetObject();
+        v.AddMember("id", convId, d.GetAllocator());
+        v.AddMember("user_id", userId, d.GetAllocator());
+        rapidjson::Value fnv;
+        fnv.SetString(firstName.c_str(), d.GetAllocator());
+        rapidjson::Value av;
+        av.SetString(avatar.c_str(), d.GetAllocator());
+        v.AddMember("first_name", fnv, d.GetAllocator());
+        v.AddMember("avatar", av, d.GetAllocator());
+        d.PushBack(v, d.GetAllocator());
+    }
+    ConnectionPool::Get()->releaseConnection(pConn);
+    PQclear(res);
+    free(temp);
+    return true;
+}
+
+int MessagesManager::ConversationsPost(int from, int to)
+{
+    return _CreateConversation(from, to);   
 }
 
 int MessagesManager::_CreateConversation(int from, int to)
 {
+    using namespace std::chrono;
+    uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+
     PGconn* pConn = ConnectionPool::Get()->getConnection();
-    std::string sql = "INSERT INTO conversations(user1, user2) VALUES ("
+    std::string sql = "INSERT INTO conversations(user1, user2, create_ts) VALUES ("
 	        + std::to_string(from) + ", "
-	        + std::to_string(to)
+	        + std::to_string(to) + ", "
+            + std::to_string(ms)
 	        + ") RETURNING id;";
 
     PGresult* res = PQexec(pConn, sql.c_str());

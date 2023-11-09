@@ -11,3 +11,5 @@ enum class EImageContentType
 };
 
 void WebPSave(unsigned char* pData, int w, int h, int c, const std::string& path);
+void DecodeAndSave(void * data, int size, std::string fullPath, EImageContentType contentType);
+std::string GenRandomImageName(int size);

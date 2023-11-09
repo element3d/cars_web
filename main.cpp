@@ -505,6 +505,10 @@ int main(void)
 
     svr.Get("/api/v1/messages", MessagesRoute::Get()->MessagesGet());
     svr.Post("/api/v1/messages", MessagesRoute::Get()->MessagesPost());
+    svr.Post("/api/v1/messages/image", MessagesRoute::Get()->MessagesUploadImage());
+
+    svr.Get("/api/v1/conversations", MessagesRoute::Get()->ConversationsGet());
+    svr.Post("/api/v1/conversations", MessagesRoute::Get()->ConversationsPost());
 
 	svr.Get("/api/v1/my_auto_parts", AutoPartsRoute::Get()->MyAutoParts());
     svr.Post("/api/v1/auto_part", AutoPartsRoute::Get()->AutoPartPost());

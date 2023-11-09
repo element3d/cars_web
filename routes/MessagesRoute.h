@@ -12,6 +12,10 @@ public:
 
 	std::function<void(const httplib::Request &, httplib::Response &)> MessagesGet();
 	std::function<void(const httplib::Request &, httplib::Response &)> MessagesPost();
+	std::function<void(const httplib::Request &, httplib::Response &)> MessagesUploadImage();
+
+	std::function<void(const httplib::Request &, httplib::Response &)> ConversationsGet();
+	std::function<void(const httplib::Request &, httplib::Response &)> ConversationsPost();
 
 private:
 	static MessagesRoute* sInstance;
