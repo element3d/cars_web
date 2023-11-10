@@ -9,6 +9,91 @@ MessagesManager* MessagesManager::Get()
     return sInstance;
 }
 
+bool MessagesManager::MessagesGetPending(int convId, int to, long long ts, rapidjson::Document& d)
+{
+    std::string sql = "SELECT * FROM messages WHERE conv_id = " + std::to_string(convId)
+        + " AND msg_ts > " + std::to_string(ts)
+        + ";";
+
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pConn, sql.c_str());
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+        fprintf(stderr, "Get messages failed: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return false;
+    }
+
+    char* temp = (char*)calloc(256, sizeof(char));
+    d.SetArray();
+
+    int rec_count = PQntuples(res);
+	for (int i = 0; i < rec_count; i++)
+	{
+        rapidjson::Value v;
+        v.SetObject();
+		strcpy(temp, PQgetvalue(res, i, 0));
+		int mid = atoi(temp);
+        v.AddMember("id", mid, d.GetAllocator());
+
+        strcpy(temp, PQgetvalue(res, i, 1));
+		int convId = atoi(temp);
+        v.AddMember("conv_id", convId, d.GetAllocator());
+
+        strcpy(temp, PQgetvalue(res, i, 2));
+		int f = atoi(temp);
+        v.AddMember("from", f, d.GetAllocator());
+
+        strcpy(temp, PQgetvalue(res, i, 3));
+		int t = atoi(temp);
+        v.AddMember("to", t, d.GetAllocator());
+
+        strcpy(temp, PQgetvalue(res, i, 4));
+		std::string msg = temp;
+        rapidjson::Document vMsg;
+        vMsg.SetString(msg.c_str(), d.GetAllocator());
+        v.AddMember("msg", vMsg, d.GetAllocator());
+
+        strcpy(temp, PQgetvalue(res, i, 5));
+		int status = atoi(temp);
+        v.AddMember("status", status, d.GetAllocator());
+
+        strcpy(temp, PQgetvalue(res, i, 6));
+		int type = atoi(temp);
+        v.AddMember("type", type, d.GetAllocator());
+
+        strcpy(temp, PQgetvalue(res, i, 7));
+		long long ts = atoll(temp);
+        v.AddMember("ts", ts, d.GetAllocator());
+
+        d.PushBack(v, d.GetAllocator());
+    }
+   // d.AddMember("messages", vMessages, d.GetAllocator());
+    free(temp);
+    PQclear(res);
+
+    sql = "UPDATE messages set status = 1 WHERE conv_id = " + std::to_string(convId)
+        + " AND msg_ts > " + std::to_string(ts)
+        + " AND to_user_id = " + std::to_string(to)
+        + ";";
+
+    /*sql = "UPDATE messages SET status = 1 WHERE conv_id = " + std::to_string(convId)
+        + " AND from_user_id = " + std::to_string(from)
+        + " AND status = 0;";*/
+    res = PQexec(pConn, sql.c_str());
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	{
+        fprintf(stderr, "Get messages failed: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return false;
+    }
+
+    ConnectionPool::Get()->releaseConnection(pConn);
+    return true;
+}
+
 bool MessagesManager::MessagesGet(int from, int to, rapidjson::Document& d)
 {
     std::string sql = "SELECT id FROM conversations WHERE (user1 = "
@@ -116,7 +201,7 @@ bool MessagesManager::MessagesGet(int from, int to, rapidjson::Document& d)
     return true;
 }
 
-int MessagesManager::MessagesPost(int convId, int from, int to, const std::string& msg, int type)
+int MessagesManager::MessagesPost(int convId, int from, int to, const std::string& msg, int type, long long ts)
 {
     PGconn* pConn = ConnectionPool::Get()->getConnection();
     int newConvId = convId;
@@ -125,8 +210,8 @@ int MessagesManager::MessagesPost(int convId, int from, int to, const std::strin
         newConvId = _CreateConversation(from, to);
     }
 
-    using namespace std::chrono;
-    uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    // using namespace std::chrono;
+    // uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 
     std::string sql = "INSERT INTO messages(conv_id, from_user_id, to_user_id, msg, msg_type, status, msg_ts) VALUES ("
 	    + std::to_string(newConvId) + ", "
@@ -135,7 +220,7 @@ int MessagesManager::MessagesPost(int convId, int from, int to, const std::strin
         + msg + "', "
         + std::to_string(type) + ", "
         + std::to_string(0) + ", "
-        + std::to_string(ms)
+        + std::to_string(ts)
 	    + ") RETURNING id;";
 
     PGresult* res = PQexec(pConn, sql.c_str());
@@ -248,7 +333,15 @@ bool MessagesManager::ConversationsGet(int from, rapidjson::Document& d)
             strcpy(temp, PQgetvalue(pMsgRes, 0, 3));
             v.AddMember("msg_ts", atoi(temp), d.GetAllocator());
         }
+        PQclear(pMsgRes);
         
+        sql = "SELECT COUNT(*) FROM messages where status = 0 AND conv_id = "
+            + std::to_string(convId) + " AND to_user_id = " + std::to_string(from) + ";";
+        PGresult* pCountRes = PQexec(pConn, sql.c_str());
+        strcpy(temp, PQgetvalue(pCountRes, 0, 0));
+		int count = atoi(temp);
+        v.AddMember("num_unread", count, d.GetAllocator());
+
         d.PushBack(v, d.GetAllocator());
     }
     ConnectionPool::Get()->releaseConnection(pConn);

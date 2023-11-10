@@ -11,6 +11,7 @@ public:
 	MessagesRoute();
 
 	std::function<void(const httplib::Request &, httplib::Response &)> MessagesGet();
+	std::function<void(const httplib::Request &, httplib::Response &)> MessagesGetPending();
 	std::function<void(const httplib::Request &, httplib::Response &)> MessagesPost();
 	std::function<void(const httplib::Request &, httplib::Response &)> MessagesUploadImage();
 

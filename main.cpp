@@ -504,6 +504,7 @@ int main(void)
     svr.Post("/api/v1/events/user_card", EventsRoute::Get()->EventsSetUserCard());
 
     svr.Get("/api/v1/messages", MessagesRoute::Get()->MessagesGet());
+    svr.Get("/api/v1/messages/pending", MessagesRoute::Get()->MessagesGetPending());
     svr.Post("/api/v1/messages", MessagesRoute::Get()->MessagesPost());
     svr.Post("/api/v1/messages/image", MessagesRoute::Get()->MessagesUploadImage());
 

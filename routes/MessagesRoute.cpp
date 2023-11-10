@@ -49,6 +49,45 @@ std::function<void(const httplib::Request &, httplib::Response &)> MessagesRoute
     };
 }
 
+std::function<void(const httplib::Request &, httplib::Response &)> MessagesRoute::MessagesGetPending()
+{
+    return [](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, DELETE, OPTIONS");
+        res.set_header("Content-Type", "text/html; charset=utf-8");
+        res.set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authentication");
+        res.set_header("Access-Control-Allow-Origin", "*");
+        
+        std::string token = req.get_header_value("Authentication");
+        auto decoded = jwt::decode(token);
+        int userId = decoded.get_payload_claim("id").as_int();
+
+        long long ts = atoll(req.get_param_value("ts", 0).c_str());
+        int convId = atoi(req.get_param_value("conv_id", 0).c_str());
+
+
+        /*rapidjson::Document dd;
+        dd.Parse(req.body.c_str());
+        int to = dd["to"].GetInt();*/
+        rapidjson::Document d;
+        bool b = MessagesManager::Get()->MessagesGetPending(convId, userId, ts, d);
+        if (b) 
+        {
+            res.status = 200;
+            rapidjson::StringBuffer buffer;
+	        buffer.Clear();
+
+	        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	        d.Accept(writer);
+	        std::string json = buffer.GetString();
+            res.set_content(json, "application/json");
+        }
+        else 
+        {
+            res.status = 500;
+        }
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> MessagesRoute::MessagesPost()
 {
     return [](const httplib::Request& req, httplib::Response& res) {
@@ -67,8 +106,9 @@ std::function<void(const httplib::Request &, httplib::Response &)> MessagesRoute
         int to = d["to"].GetInt();
         std::string msg = d["msg"].GetString();
         int type = d["type"].GetInt();
+        long long ts = d["ts"].GetDouble();
 
-        int cId = MessagesManager::Get()->MessagesPost(convId, userId, to, msg, type);
+        int cId = MessagesManager::Get()->MessagesPost(convId, userId, to, msg, type, ts);
         if (cId > 0)
         {
             res.status = 200;

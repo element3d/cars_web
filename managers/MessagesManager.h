@@ -14,7 +14,8 @@ public:
     static MessagesManager* Get();
 
     bool MessagesGet(int from, int to, rapidjson::Document& d);
-    int MessagesPost(int convId, int from, int to, const std::string& msg, int type);
+    bool MessagesGetPending(int convId, int to, long long ts, rapidjson::Document& d);
+    int MessagesPost(int convId, int from, int to, const std::string& msg, int type, long long ts);
     void MessagesSetImage(int msgId, const std::string& imagePath);
 
     bool ConversationsGet(int from, rapidjson::Document& d);
