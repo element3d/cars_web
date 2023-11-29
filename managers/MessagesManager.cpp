@@ -65,7 +65,7 @@ bool MessagesManager::MessagesGetPending(int convId, int to, long long ts, rapid
 
         strcpy(temp, PQgetvalue(res, i, 7));
 		long long ts = atoll(temp);
-        v.AddMember("ts", ts, d.GetAllocator());
+        v.AddMember<long long>("ts", ts, d.GetAllocator());
 
         d.PushBack(v, d.GetAllocator());
     }
@@ -564,6 +564,13 @@ int MessagesManager::_FindConversation(int from, int to)
 
     char* temp = (char*)calloc(256, sizeof(char));
     int rec_count = PQntuples(res);
+    if (rec_count <= 0) 
+    {
+        free(temp);
+        PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return -1;
+    }
     strcpy(temp, PQgetvalue(res, 0, 0));
     int id = atoi(temp);
     PQclear(res);
