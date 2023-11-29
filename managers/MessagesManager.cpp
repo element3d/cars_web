@@ -341,8 +341,16 @@ int MessagesManager::MessagesPost(int convId, int from, int to, const std::strin
 
 void MessagesManager::MessagesSetImage(int msgId, const std::string& imagePath)
 {
+    std::string prefix = "/var/www/";
+    size_t pos = imagePath.find(prefix);
+    std::string url = imagePath;
+    if (pos != std::string::npos)
+    {
+        url = url.substr(pos + prefix.length());
+    }
+
     PGconn* pConn = ConnectionPool::Get()->getConnection();
-    std::string sql = "UPDATE messages set msg = '" + imagePath + "' WHERE id = " + std::to_string(msgId) + ";";
+    std::string sql = "UPDATE messages set msg = '" + url + "' WHERE id = " + std::to_string(msgId) + ";";
     PGresult* res = PQexec(pConn, sql.c_str());
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
