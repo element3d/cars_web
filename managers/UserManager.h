@@ -84,7 +84,9 @@ public:
 //	void SetPG(PGconn* pPG);
 //    void SetPsql(pqxx::connection* pPsql);
     int CreateUser(const std::string& phone, const std::string& password, int type, const std::string& firstName);
+    bool MeHandshake(int id);
     DBUser* GetUser(int id);
+    uint64_t UserHandshake(int id);
     bool EditUser(int id, const std::string& firstName, const std::string& phone);
     DBUser* GetUser(const std::string& username);
     bool ChangePassword(const std::string& phone, const std::string& password);

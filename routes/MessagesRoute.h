@@ -16,7 +16,9 @@ public:
 	std::function<void(const httplib::Request &, httplib::Response &)> MessagesUploadImage();
 
 	std::function<void(const httplib::Request &, httplib::Response &)> ConversationsGet();
+	std::function<void(const httplib::Request &, httplib::Response &)> ConversationsGetPending();
 	std::function<void(const httplib::Request &, httplib::Response &)> ConversationsPost();
+	std::function<void(const httplib::Request &, httplib::Response &)> ConversationsDelete();
 
 private:
 	static MessagesRoute* sInstance;

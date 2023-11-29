@@ -49,6 +49,25 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
     };
 }
 
+std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::MeHandshake()
+{
+     return [](const httplib::Request& req, httplib::Response& res){
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, OPTIONS");
+		res.set_header("Content-Type", "text/html; charset=utf-8");
+		res.set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authentication");
+		res.set_header("Access-Control-Allow-Origin", "*");
+		res.set_header("Connection", "close");
+       
+        std::string token = req.get_header_value("Authentication");
+        auto decoded = jwt::decode(token);
+        int userId = decoded.get_payload_claim("id").as_int();
+
+        bool b = UserManager::Get()->MeHandshake(userId);
+        res.status = 200;
+        res.set_content("OK", "text/plain");
+    };
+}
+
 #include "../anvir/avir.h"
 #include "../stb_image/stb_image_write.h"
 #include "../stb_image/stb_image.h"
@@ -422,6 +441,27 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::E
 
         res.status = 200;
         res.set_content("OK", "text/plain");
+    };
+}
+
+std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::UserHandshake()
+{
+    return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+        DBUser* pUser = nullptr;
+
+        if (req.has_param("user_id"))
+        {
+            std::string userId = (req.get_param_value("user_id", 0).c_str());
+            uint64_t ts = UserManager::Get()->UserHandshake(atoi(userId.c_str()));
+            res.set_content(std::to_string(ts), "text/plain");
+        }
+      
+        res.status = 200;
+        delete pUser;
+
     };
 }
 

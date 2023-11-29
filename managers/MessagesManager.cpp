@@ -94,11 +94,86 @@ bool MessagesManager::MessagesGetPending(int convId, int to, long long ts, rapid
     return true;
 }
 
-bool MessagesManager::MessagesGet(int from, int to, rapidjson::Document& d)
+uint64_t MessagesManager::_GetMessagesDeleteTs(int from, int to)
 {
-    std::string sql = "SELECT id FROM conversations WHERE (user1 = "
+    std::string sql = "SELECT id, user1_delete_ts FROM conversations WHERE user1 = "
+        + std::to_string(from) + " AND user2 = " + std::to_string(to) + ";";
+
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pConn, sql.c_str());
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+        fprintf(stderr, "Get messages failed: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return 0;
+    }
+    bool found = PQntuples(res) > 0;
+    if (!found)
+    {
+        sql = "SELECT id, user2_delete_ts FROM conversations WHERE user2 = "
+        + std::to_string(from) + " AND user1 = " + std::to_string(to) + ";";
+
+        PQclear(res);
+        res = PQexec(pConn, sql.c_str());
+	    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	    {
+            fprintf(stderr, "Get messages failed: %s", PQerrorMessage(pConn));
+		    PQclear(res);
+            ConnectionPool::Get()->releaseConnection(pConn);
+            return 0;
+        }
+        bool found = PQntuples(res) > 0;
+        if (!found) 
+        {
+            PQclear(res);
+            ConnectionPool::Get()->releaseConnection(pConn);
+            return 0;
+        }
+    }
+
+    char* temp = (char*)calloc(256, sizeof(char));
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    int id = atol(temp);
+
+    strcpy(temp, PQgetvalue(res, 0, 1));
+    uint64_t ts = _atoi64(temp);
+    ConnectionPool::Get()->releaseConnection(pConn);
+    return ts;
+}
+
+int MessagesManager::_GetNumMessages(int from, int convId, uint64_t ts)
+{
+    std::string sql = "SELECT COUNT(*) FROM messages WHERE conv_id = " + std::to_string(convId) + "AND msg_ts > " + std::to_string(ts) + ";";
+
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pConn, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+        fprintf(stderr, "Get messages failed: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return 0;
+    }
+
+    char* temp = (char*)calloc(256, sizeof(char));
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    auto i = atoi(temp);
+    ConnectionPool::Get()->releaseConnection(pConn);
+    PQclear(res);
+    free(temp);
+    return i;
+}
+
+bool MessagesManager::MessagesGet(int from, int to, int page, rapidjson::Document& d)
+{
+    /*std::string sql = "SELECT id FROM conversations WHERE (user1 = "
         + std::to_string(from) + " AND user2 = " + std::to_string(to) + ") OR ( user1 = " 
         + std::to_string(to) + " AND user2 = " + std::to_string(from) + ");";
+    */
+
+    std::string sql = "SELECT id, user1_delete_ts FROM conversations WHERE user1 = "
+        + std::to_string(from) + " AND user2 = " + std::to_string(to) + ";";
 
 
     PGconn* pConn = ConnectionPool::Get()->getConnection();
@@ -110,15 +185,37 @@ bool MessagesManager::MessagesGet(int from, int to, rapidjson::Document& d)
         ConnectionPool::Get()->releaseConnection(pConn);
         return false;
     }
-
-    if (PQntuples(res) < 1) 
+    bool found = PQntuples(res) > 0;
+    if (!found)
     {
-        return false;    
+        sql = "SELECT id, user2_delete_ts FROM conversations WHERE user2 = "
+        + std::to_string(from) + " AND user1 = " + std::to_string(to) + ";";
+
+        PQclear(res);
+        res = PQexec(pConn, sql.c_str());
+	    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	    {
+            fprintf(stderr, "Get messages failed: %s", PQerrorMessage(pConn));
+		    PQclear(res);
+            ConnectionPool::Get()->releaseConnection(pConn);
+            return false;
+        }
+        bool found = PQntuples(res) > 0;
+        if (!found) 
+        {
+            PQclear(res);
+            ConnectionPool::Get()->releaseConnection(pConn);
+            return false;
+        }
     }
 
     char* temp = (char*)calloc(256, sizeof(char));
     strcpy(temp, PQgetvalue(res, 0, 0));
-    int id = atoi(temp);
+    int id = atol(temp);
+
+    strcpy(temp, PQgetvalue(res, 0, 1));
+    uint64_t ts = _atoi64(temp);
+
     PQclear(res);
     // free(temp);
 
@@ -139,13 +236,14 @@ bool MessagesManager::MessagesGet(int from, int to, rapidjson::Document& d)
         }
     }
 
-    sql = "SELECT * FROM messages WHERE conv_id = " + std::to_string(id) + " ORDER BY msg_ts ASC;";
+    sql = "SELECT * FROM messages WHERE conv_id = " + std::to_string(id) + "AND msg_ts > " + std::to_string(ts) + " ORDER BY msg_ts DESC limit 100 offset " + std::to_string((page - 1) * 100);
     res = PQexec(pConn, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
         fprintf(stderr, "Get messages failed: %s", PQerrorMessage(pConn));
 		PQclear(res);
         ConnectionPool::Get()->releaseConnection(pConn);
+        free(temp);
         return false;
     }
     d.SetObject();
@@ -291,6 +389,13 @@ bool MessagesManager::ConversationsGet(int from, rapidjson::Document& d)
         int userId;
         if (from == user1) userId = user2;
         else userId = user1;
+
+        uint64_t ts = _GetMessagesDeleteTs(from, userId);
+        {
+            int numMessages = _GetNumMessages(from, convId, ts);
+            if (numMessages <= 0) continue;
+        }
+
         sql = "SELECT first_name, avatar from users WHERE id = " + std::to_string(userId) + ";";
         PGresult* pUsersRes = PQexec(pConn, sql.c_str());
         strcpy(temp, PQgetvalue(pUsersRes, 0, 0));
@@ -350,9 +455,121 @@ bool MessagesManager::ConversationsGet(int from, rapidjson::Document& d)
     return true;
 }
 
+int MessagesManager::ConversationsGetPending(int from)
+{
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    std::string sql = "SELECT count(DISTINCT conv_id) from messages where to_user_id = "
+        + std::to_string(from) 
+        + " AND status = 0;";
+
+    PGresult* res = PQexec(pConn, sql.c_str());
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+        fprintf(stderr, "Get pending conversations failed: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return 0;
+	}
+
+    char* temp = (char*)calloc(256, sizeof(char));
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    int count = atoi(temp);
+    PQclear(res);
+    ConnectionPool::Get()->releaseConnection(pConn);
+    free(temp);
+    return count;
+}
+
 int MessagesManager::ConversationsPost(int from, int to)
 {
+    int id = _FindConversation(from, to);
+    if (id > 0) return id;
     return _CreateConversation(from, to);   
+}
+
+int MessagesManager::ConversationsDelete(int from, int convId)
+{
+    using namespace std::chrono;
+    uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    std::string sql = "SELECT * FROM conversations WHERE id = "
+        + std::to_string(convId) 
+        + " AND user1 = " + std::to_string(from) + ";";
+
+    PGresult* res = PQexec(pConn, sql.c_str());
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+        fprintf(stderr, "Create conversation failed: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return -1;
+	}
+    PQclear(res);
+    bool found = PQntuples(res) > 0;
+    if (!found) 
+    {
+        sql = "SELECT * FROM conversations WHERE id = "
+        + std::to_string(convId) 
+        + " AND user2 = " + std::to_string(from) + ";";
+
+        PGresult* res = PQexec(pConn, sql.c_str());
+	    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	    {
+            fprintf(stderr, "Create conversation failed: %s", PQerrorMessage(pConn));
+		    PQclear(res);
+            ConnectionPool::Get()->releaseConnection(pConn);
+            return -1;
+	    }
+        bool found = PQntuples(res) > 0;
+        if (found) 
+        {
+            sql = "UPDATE CONVERSATIONS SET user2_delete_ts = " + std::to_string(ms) + " WHERE id = "
+                + std::to_string(convId) 
+                + " AND user2 = " + std::to_string(from) + ";";
+            PGresult* res = PQexec(pConn, sql.c_str());
+            PQclear(res);
+        }
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return 1;
+    }
+    else 
+    {
+        sql = "UPDATE CONVERSATIONS SET user1_delete_ts = " + std::to_string(ms) + " WHERE id = "
+            + std::to_string(convId) 
+            + " AND user1 = " + std::to_string(from) + ";";
+        PGresult* res = PQexec(pConn, sql.c_str());
+        PQclear(res);
+    }
+
+    ConnectionPool::Get()->releaseConnection(pConn);
+    return 1;
+}
+
+int MessagesManager::_FindConversation(int from, int to)
+{
+     std::string sql = "SELECT id FROM conversations WHERE (user1 = "
+        + std::to_string(from) + " AND user2 = " + std::to_string(to) + ") OR ( user1 = " 
+        + std::to_string(to) + " AND user2 = " + std::to_string(from) + ");";
+   
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pConn, sql.c_str());
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+        fprintf(stderr, "Create conversation failed: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return -1;
+	}
+
+    char* temp = (char*)calloc(256, sizeof(char));
+    int rec_count = PQntuples(res);
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    int id = atoi(temp);
+    PQclear(res);
+    free(temp);
+    ConnectionPool::Get()->releaseConnection(pConn);
+    return id;
 }
 
 int MessagesManager::_CreateConversation(int from, int to)

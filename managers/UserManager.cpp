@@ -456,15 +456,57 @@ bool UserManager::EditUser(int id, const std::string& firstName, const std::stri
     return true;
 }
 
+bool UserManager::MeHandshake(int id)
+{
+    using namespace std::chrono;
+    uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    const std::string sql = "UPDATE users SET handshake_ts = " + std::to_string(ms) + " WHERE id = " + std::to_string(id) + ";";
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pConn, sql.c_str());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	{
+        char* err = PQerrorMessage(pConn);
+        fprintf(stderr, "Error: Failed to get user: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+		return false;
+	}
+    PQclear(res);
+    ConnectionPool::Get()->releaseConnection(pConn);
+    return true;
+}
+
+uint64_t UserManager::UserHandshake(int id)
+{
+    const std::string sql = "SELECT handshake_ts FROM users WHERE id = " + std::to_string(id) + ";";
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pConn, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+        char* err = PQerrorMessage(pConn);
+        fprintf(stderr, "Error: Failed to get user: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+		return 0;
+	}
+    char* temp = (char*)calloc(256, sizeof(char));
+	strcpy(temp, PQgetvalue(res, 0, 0));
+	uint64_t ts = atoll(temp);
+    PQclear(res);
+    ConnectionPool::Get()->releaseConnection(pConn);
+    free(temp);
+    return ts;
+}
+
 DBUser* UserManager::GetUser(int id)
 {
-  if (id <= 0) return nullptr;
-  std::string sql = "SELECT * FROM users WHERE id = "
-            + std::to_string(id) + ";";
+    if (id <= 0) return nullptr;
+    std::string sql = "SELECT * FROM users WHERE id = "
+                + std::to_string(id) + ";";
 
-  PGconn* pConn = ConnectionPool::Get()->getConnection();//ConnectionPool::Get()->getConnection();
+    PGconn* pConn = ConnectionPool::Get()->getConnection();//ConnectionPool::Get()->getConnection();
 
-  PGresult* res = PQexec(pConn, sql.c_str());
+    PGresult* res = PQexec(pConn, sql.c_str());
 	if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0)
 	{
       char* err = PQerrorMessage(pConn);

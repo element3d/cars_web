@@ -461,10 +461,12 @@ int main(void)
     svr.Post("/api/v1/users/password", AuthRoute::Get()->ChangePassword());
 
     svr.Get("/api/v1/me", UsersRoute::Get()->Me());
+    svr.Get("/api/v1/me/handshake", UsersRoute::Get()->MeHandshake());
     svr.Post("/api/v1/me/avatar", UsersRoute::Get()->MeUploadAvatar());
     svr.Put("/api/v1/me/avatar", UsersRoute::Get()->MeUpdateAvatar());
     svr.Put("/api/v1/me/cover", UsersRoute::Get()->MeUpdateCover());
     svr.Get("/api/v1/user", UsersRoute::Get()->GetUser());
+    svr.Get("/api/v1/user/handshake", UsersRoute::Get()->UserHandshake());
     svr.Put("/api/v1/user", UsersRoute::Get()->EditUser());
     svr.Get("/api/v1/users/cars", UsersRoute::Get()->GetUserCars());
     svr.Get("/api/v1/users/auto_part_makes", UsersRoute::Get()->UserGetAutoPartMakes());
@@ -509,7 +511,9 @@ int main(void)
     svr.Post("/api/v1/messages/image", MessagesRoute::Get()->MessagesUploadImage());
 
     svr.Get("/api/v1/conversations", MessagesRoute::Get()->ConversationsGet());
+    svr.Get("/api/v1/conversations/pending", MessagesRoute::Get()->ConversationsGetPending());
     svr.Post("/api/v1/conversations", MessagesRoute::Get()->ConversationsPost());
+    svr.Delete("/api/v1/conversations", MessagesRoute::Get()->ConversationsDelete());
 
 	svr.Get("/api/v1/my_auto_parts", AutoPartsRoute::Get()->MyAutoParts());
     svr.Post("/api/v1/auto_part", AutoPartsRoute::Get()->AutoPartPost());
