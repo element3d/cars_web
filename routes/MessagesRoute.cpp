@@ -180,7 +180,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> MessagesRoute
 
         MessagesManager::Get()->MessagesSetImage(atoi(messageId.c_str()), filename);
         res.status = 200;
-        res.set_content(filename, "text/plain");
+        res.set_content(std::string("data/conversations/" + conversationId + "/" + rn + ".webp"), "text/plain");
     };
 }
 
