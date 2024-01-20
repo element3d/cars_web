@@ -172,7 +172,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
 //        ofs << image_file.content;
 
         EImageContentType ct = EImageContentType::Jpeg;
-        if (image_file.content_type == std::string("image/webp")) ct = EImageContentType::Webp;
+        if (image_file.content_type == std::string("image/webp") || image_file.content_type == std::string("application/octet-stream")) ct = EImageContentType::Webp;
         Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, ct);
 
         UserManager::Get()->SetUserAvatar(atoi(userId.c_str()), std::string("data/users/") + userId + "/avatar.webp");
@@ -206,7 +206,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
 
 
         EImageContentType ct = EImageContentType::Jpeg;
-        if (image_file.content_type == std::string("image/webp")) ct = EImageContentType::Webp;
+        if (image_file.content_type == std::string("image/webp") || image_file.content_type == std::string("application/octet-stream")) ct = EImageContentType::Webp;
         Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, ct);
 
         UserManager::Get()->SetUserCover(atoi(userId.c_str()), std::string("data/users/") + userId + "/cover.webp");

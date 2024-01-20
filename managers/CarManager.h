@@ -113,6 +113,8 @@ public:
 	  void GetCars(int userId, std::vector<DBCar*>& cars);
     DBCar* GetCar(int carId);
     void GetCars(const CarFilter& filter, int page, std::vector<DBCar*>& cars);
+    void GetBandCars(const std::string& band, int limit, int page, std::vector<DBCar*>& cars);
+
     int GetTotalNumCars(const CarFilter& filter);
     int GetNumCars(int userId);
     void GetNumCars(std::vector<int>& outCounts);

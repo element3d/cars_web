@@ -153,6 +153,92 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
     };
 }
 
+std::function<void(const httplib::Request&, httplib::Response&)> CarsRoute::BandsGet()
+{
+    return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+        rapidjson::Document d;
+        d.SetArray();
+
+        {
+            rapidjson::Value v;
+            v.SetObject();
+            v.AddMember("name", "muscles", d.GetAllocator());
+            v.AddMember("image", "data/bands/muscles.png", d.GetAllocator());
+            d.PushBack(v, d.GetAllocator());
+        }
+
+        {
+            rapidjson::Value v;
+            v.SetObject();
+            v.AddMember("name", "supersedans", d.GetAllocator());
+            v.AddMember("image", "data/bands/supersedans.png", d.GetAllocator());
+            d.PushBack(v, d.GetAllocator());
+        }
+
+        {
+            rapidjson::Value v;
+            v.SetObject();
+            v.AddMember("name", "minions", d.GetAllocator());
+            v.AddMember("image", "data/bands/minions.png", d.GetAllocator());
+            d.PushBack(v, d.GetAllocator());
+        }
+
+        {
+            rapidjson::Value v;
+            v.SetObject();
+            v.AddMember("name", "samurai", d.GetAllocator());
+            v.AddMember("image", "data/bands/samurai.png", d.GetAllocator());
+            d.PushBack(v, d.GetAllocator());
+        }
+
+        rapidjson::StringBuffer buffer;
+        buffer.Clear();
+
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        d.Accept(writer);
+        std::string json = buffer.GetString();
+        res.status = 200;
+        res.set_content(json, "application/json");
+    };
+}
+
+std::function<void(const httplib::Request&, httplib::Response&)> CarsRoute::BandGet()
+{
+    return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+        std::string band;
+        if (req.has_param("band"))
+        {
+            band = (req.get_param_value("band", 0).c_str());
+        }
+
+        int limit = 40;
+        if (req.has_param("limit"))
+        {
+            limit = atoi(req.get_param_value("limit", 0).c_str());
+        }
+
+        int page = 1;
+        if (req.has_param("page"))
+        {
+            page = atoi(req.get_param_value("page", 0).c_str());
+        }
+
+        std::vector<DBCar*> cars;
+        CarManager::Get()->GetBandCars(band, limit, page, cars);
+        int totalNumCars = 40;//CarManager::Get()->GetTotalNumCars(filter);
+        res.status = 200;
+        std::string json;
+        ToJson(totalNumCars, cars, json);
+        res.set_content(json, "application/json");
+        for (auto pCar : cars)
+            delete pCar;
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsGet()
 {
 	return [this](const httplib::Request& req, httplib::Response& res) {
@@ -451,9 +537,9 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 
 		std::string carId = req.get_param_value("car_id", 0).c_str();
 		httplib::MultipartFormData image_file = req.get_file_value("image_file");
-    httplib::MultipartFormData isAvatar = req.get_file_value("is_avatar");
+        httplib::MultipartFormData isAvatar = req.get_file_value("is_avatar");
 
-    std::string dataDir = "data";
+        std::string dataDir = "data";
 //     std::string dataDir = "/var/www/data";
 		if (!stlplus::folder_exists(dataDir)) stlplus::folder_create(dataDir);
 		std::string carsDir = dataDir + "/cars";
@@ -467,8 +553,9 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
 //		std::ofstream ofs(filename, std::ios::binary);
 //		ofs << image_file.content;
 
-        EImageContentType ct = EImageContentType::Jpeg;
-        if (image_file.content_type == std::string("image/webp")) ct = EImageContentType::Webp;
+        EImageContentType ct = EImageContentType::Webp;
+        if (image_file.content_type == std::string("image/jpeg")) ct = EImageContentType::Jpeg;
+        else if (image_file.content_type == std::string("image/png")) ct = EImageContentType::Png;
 
         Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, rn, ct);
         bool isAva = atoi(isAvatar.content.c_str());

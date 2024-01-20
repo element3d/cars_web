@@ -28,6 +28,10 @@ public:
     std::function<void(const httplib::Request &, httplib::Response &)> CarsRefresh();
     std::function<void(const httplib::Request &, httplib::Response &)> CarsRequestModel();
 
+    std::function<void(const httplib::Request&, httplib::Response&)> BandsGet();
+    std::function<void(const httplib::Request&, httplib::Response&)> BandGet();
+
+
     void _ParseFilter(const httplib::Request& req, CarFilter& filter);
 
 

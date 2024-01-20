@@ -497,6 +497,10 @@ int main(void)
     svr.Get("/api/v1/cars/refresh", CarsRoute::Get()->CarsRefresh());
     svr.Post("/api/v1/cars/req_model", CarsRoute::Get()->CarsRequestModel());
 
+    svr.Get("/api/v1/bands", CarsRoute::Get()->BandsGet());
+    svr.Get("/api/v1/band", CarsRoute::Get()->BandGet());
+
+
     svr.Get("/api/v1/events", EventsRoute::Get()->GetEvents());
     svr.Get("/api/v1/events/recent", EventsRoute::Get()->GetRecentEvent());
     svr.Get("/api/v1/events/notes", EventsRoute::Get()->GetEventsNotes());
@@ -556,5 +560,5 @@ int main(void)
     auto ret = svr.set_mount_point("/assets", "./assets");
 	ret = svr.set_mount_point("/data", "./data");
 
-    svr.listen("192.168.18.133", 1234);
+    svr.listen("192.168.1.6", 1234);
 }

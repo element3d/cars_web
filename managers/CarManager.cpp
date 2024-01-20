@@ -570,6 +570,47 @@ DBCar* CarManager::GetCar(int carId)
     return cars[0];
 }
 
+void CarManager::GetBandCars(const std::string& band, int limit, int page, std::vector<DBCar*>& cars)
+{
+    std::string sql;
+    if (band == "muscles")
+    {
+        sql = "SELECT * FROM CARS WHERE class = 'fordmustang' OR class = 'chevroletcamaro' OR class = 'dodgecharger' OR class = 'dodgechallenger'";
+    }
+    else if (band == "minions") 
+    {
+        sql = "SELECT * FROM CARS WHERE class = 'jeepcompass' OR class = 'jeepcherokee' OR class = 'mazdacx3'"
+            " OR class = 'mazdacx30' OR class = 'mazdacx5' OR class = 'mazdacx50'";
+    }
+    else if (band == "supersedans")
+    {
+        sql = "SELECT * FROM CARS WHERE body_type = 0 AND engine_power >= 300";
+    }
+    if (band == "samurai")
+    {
+        sql = "SELECT * FROM CARS WHERE class = 'toyotacamry' OR class = 'mazda6' OR class = 'kiak5' OR class = 'hyundaisonata'";
+    }
+    sql += " order by refresh_ts desc limit " + std::to_string(limit) + " offset " + std::to_string(limit * std::max((page - 1), 0)) + ";";
+
+    ConnectionPool* pPool = ConnectionPool::Get();
+    PGconn* pg = pPool->getConnection();
+
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        char* err = PQerrorMessage(pg);
+        fprintf(stderr, "Error: Failed to get cars: %s", PQerrorMessage(pg));
+        PQclear(res);
+        pPool->releaseConnection(pg);
+        return;
+    }
+    //PQfinish(pg);
+    pPool->releaseConnection(pg);
+
+    _ParseGPResult(res, cars);
+
+}
+
 void CarManager::GetCars(const CarFilter& filter, int page, std::vector<DBCar*>& cars)
 {
 	  std::string sql;
