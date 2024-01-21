@@ -577,6 +577,10 @@ void CarManager::GetBandCars(const std::string& band, int limit, int page, std::
     {
         sql = "SELECT * FROM CARS WHERE class = 'fordmustang' OR class = 'chevroletcamaro' OR class = 'dodgecharger' OR class = 'dodgechallenger'";
     }
+    if (band == "monsters")
+    {
+        sql = "SELECT * FROM CARS WHERE engine_power >= 450";
+    }
     else if (band == "minions") 
     {
         sql = "SELECT * FROM CARS WHERE class = 'jeepcompass' OR class = 'jeepcherokee' OR class = 'mazdacx3'"
