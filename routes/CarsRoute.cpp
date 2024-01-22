@@ -164,8 +164,16 @@ std::function<void(const httplib::Request&, httplib::Response&)> CarsRoute::Band
         {
             rapidjson::Value v;
             v.SetObject();
+            v.AddMember("name", "luxury", d.GetAllocator());
+            v.AddMember("image", "data/bands/luxury.webp", d.GetAllocator());
+            d.PushBack(v, d.GetAllocator());
+        }
+
+        {
+            rapidjson::Value v;
+            v.SetObject();
             v.AddMember("name", "muscles", d.GetAllocator());
-            v.AddMember("image", "data/bands/muscles.png", d.GetAllocator());
+            v.AddMember("image", "data/bands/muscles.webp", d.GetAllocator());
             d.PushBack(v, d.GetAllocator());
         }
 
@@ -173,7 +181,7 @@ std::function<void(const httplib::Request&, httplib::Response&)> CarsRoute::Band
             rapidjson::Value v;
             v.SetObject();
             v.AddMember("name", "monsters", d.GetAllocator());
-            v.AddMember("image", "data/bands/monsters.png", d.GetAllocator());
+            v.AddMember("image", "data/bands/monsters.webp", d.GetAllocator());
             d.PushBack(v, d.GetAllocator());
         }
 
@@ -181,7 +189,7 @@ std::function<void(const httplib::Request&, httplib::Response&)> CarsRoute::Band
             rapidjson::Value v;
             v.SetObject();
             v.AddMember("name", "supersedans", d.GetAllocator());
-            v.AddMember("image", "data/bands/supersedans.png", d.GetAllocator());
+            v.AddMember("image", "data/bands/supersedans.webp", d.GetAllocator());
             d.PushBack(v, d.GetAllocator());
         }
 
@@ -189,7 +197,7 @@ std::function<void(const httplib::Request&, httplib::Response&)> CarsRoute::Band
             rapidjson::Value v;
             v.SetObject();
             v.AddMember("name", "minions", d.GetAllocator());
-            v.AddMember("image", "data/bands/minions.png", d.GetAllocator());
+            v.AddMember("image", "data/bands/minions.webp", d.GetAllocator());
             d.PushBack(v, d.GetAllocator());
         }
 
@@ -197,7 +205,7 @@ std::function<void(const httplib::Request&, httplib::Response&)> CarsRoute::Band
             rapidjson::Value v;
             v.SetObject();
             v.AddMember("name", "samurai", d.GetAllocator());
-            v.AddMember("image", "data/bands/samurai.png", d.GetAllocator());
+            v.AddMember("image", "data/bands/samurai.webp", d.GetAllocator());
             d.PushBack(v, d.GetAllocator());
         }
 
