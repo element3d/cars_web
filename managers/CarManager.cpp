@@ -36,13 +36,13 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
     }
 
     int numGolds = 0;
-    {
+    /*{
         char* temp = (char*)calloc(256, sizeof(char));
         int rec_count = PQntuples(res);
         strcpy(temp, PQgetvalue(res, 0, 0));
         numGolds = atoi(temp);
         free(temp);
-    }
+    }*/
 
     using namespace std::chrono;
     uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
@@ -594,17 +594,21 @@ void CarManager::GetBandCars(const std::string& band, int limit, int page, std::
     {
         sql = "SELECT * FROM CARS WHERE body_type = 0 AND engine_power >= 300";
     }
-    if (band == "samurai")
+    else if (band == "samurai")
     {
         sql = "SELECT * FROM CARS WHERE class = 'toyotacamry' OR class = 'mazda6' OR class = 'kiak5' OR class = 'hyundaisonata'";
     }
-    if (band == "banana")
+    else if (band == "banana")
     {
         sql = "SELECT * FROM CARS WHERE class = 'mercedesbenzclsclass' OR class = 'bmw6' OR class = 'audia7' OR class = 'porschepanamera'";
     }
-    if (band == "hulk")
+    else if (band == "hulk")
     {
         sql = "SELECT * FROM CARS WHERE class = 'mercedesbenzgleclass' OR class = 'mercedesbenzglecoupe' OR class = 'bmwx5' OR class = 'bmwx6' OR class = 'audiq7' OR class = 'porschecayenne'";
+    }
+    else if (band == "thewar")
+    {
+        sql = "SELECT * FROM CARS WHERE class = 'mercedesbenzeclass' OR class = 'bmw5' OR class = 'audia6' OR class = 'dodgecharger'";
     }
     sql += " order by refresh_ts desc limit " + std::to_string(limit) + " offset " + std::to_string(limit * std::max((page - 1), 0)) + ";";
 
