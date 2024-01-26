@@ -610,6 +610,14 @@ void CarManager::GetBandCars(const std::string& band, int limit, int page, std::
     {
         sql = "SELECT * FROM CARS WHERE class = 'mercedesbenzeclass' OR class = 'bmw5' OR class = 'audia6' OR class = 'dodgecharger'";
     }
+    else if (band == "hothatch")
+    {
+        sql = "SELECT * FROM CARS WHERE body_type = 2 AND engine_power >= 150";
+    }
+    else if (band == "artillery")
+    {
+        sql = "SELECT * FROM CARS WHERE class = 'mercedesbenzgclass' OR class = 'jeepwrangler'";
+    }
     sql += " order by refresh_ts desc limit " + std::to_string(limit) + " offset " + std::to_string(limit * std::max((page - 1), 0)) + ";";
 
     ConnectionPool* pPool = ConnectionPool::Get();
