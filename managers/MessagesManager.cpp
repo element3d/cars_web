@@ -406,17 +406,23 @@ bool MessagesManager::ConversationsGet(int from, rapidjson::Document& d)
 
         sql = "SELECT first_name, avatar from users WHERE id = " + std::to_string(userId) + ";";
         PGresult* pUsersRes = PQexec(pConn, sql.c_str());
-        strcpy(temp, PQgetvalue(pUsersRes, 0, 0));
-		std::string firstName = temp;
+        bool userFound = PQntuples(res) > 0;
+        std::string firstName = "deleted_user";
+        std::string avatar = "";
+        if (userFound) 
+        {
+            strcpy(temp, PQgetvalue(pUsersRes, 0, 0));
+		    std::string firstName = temp;
 
-        strcpy(temp, PQgetvalue(pUsersRes, 0, 1));
-		std::string avatar = temp;
+            strcpy(temp, PQgetvalue(pUsersRes, 0, 1));
+		    std::string avatar = temp;
+        }
+
         PQclear(pUsersRes);
-
         rapidjson::Value v;
         v.SetObject();
         v.AddMember("id", convId, d.GetAllocator());
-        v.AddMember("user_id", userId, d.GetAllocator());
+        v.AddMember("user_id", userFound ? userId : -1, d.GetAllocator());
         rapidjson::Value fnv;
         fnv.SetString(firstName.c_str(), d.GetAllocator());
         rapidjson::Value av;
