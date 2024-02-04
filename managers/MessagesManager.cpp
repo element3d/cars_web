@@ -406,7 +406,16 @@ bool MessagesManager::ConversationsGet(int from, rapidjson::Document& d)
 
         sql = "SELECT first_name, avatar from users WHERE id = " + std::to_string(userId) + ";";
         PGresult* pUsersRes = PQexec(pConn, sql.c_str());
-        bool userFound = PQntuples(res) > 0;
+        bool userFound = true;
+        if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	    {
+            userFound = false;
+            /*fprintf(stderr, "Get conversations failed: %s", PQerrorMessage(pConn));
+		    PQclear(res);
+            ConnectionPool::Get()->releaseConnection(pConn);
+            return -1;*/
+	    }
+        else userFound = PQntuples(res) > 0;
         std::string firstName = "deleted_user";
         std::string avatar = "";
         if (userFound) 
