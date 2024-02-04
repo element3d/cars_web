@@ -489,6 +489,9 @@ uint64_t UserManager::UserHandshake(int id)
         ConnectionPool::Get()->releaseConnection(pConn);
 		return 0;
 	}
+    bool userFound = PQntuples(res) > 0;
+    if (!userFound) return -1;
+
     char* temp = (char*)calloc(256, sizeof(char));
 	strcpy(temp, PQgetvalue(res, 0, 0));
 	uint64_t ts = atoll(temp);

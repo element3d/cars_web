@@ -407,31 +407,29 @@ bool MessagesManager::ConversationsGet(int from, rapidjson::Document& d)
         sql = "SELECT first_name, avatar from users WHERE id = " + std::to_string(userId) + ";";
         PGresult* pUsersRes = PQexec(pConn, sql.c_str());
         bool userFound = true;
-        if (PQresultStatus(res) != PGRES_TUPLES_OK)
+        
+        if (PQresultStatus(pUsersRes) != PGRES_TUPLES_OK)
 	    {
             userFound = false;
-            /*fprintf(stderr, "Get conversations failed: %s", PQerrorMessage(pConn));
-		    PQclear(res);
-            ConnectionPool::Get()->releaseConnection(pConn);
-            return -1;*/
 	    }
-        else userFound = PQntuples(res) > 0;
+        else userFound = PQntuples(pUsersRes) > 0;
         std::string firstName = "deleted_user";
         std::string avatar = "";
         if (userFound) 
         {
             strcpy(temp, PQgetvalue(pUsersRes, 0, 0));
-		    std::string firstName = temp;
+		    firstName = temp;
 
             strcpy(temp, PQgetvalue(pUsersRes, 0, 1));
-		    std::string avatar = temp;
+		    avatar = temp;
         }
 
         PQclear(pUsersRes);
         rapidjson::Value v;
         v.SetObject();
         v.AddMember("id", convId, d.GetAllocator());
-        v.AddMember("user_id", userFound ? userId : -1, d.GetAllocator());
+        v.AddMember("deleted_user", !userFound, d.GetAllocator());
+        v.AddMember("user_id", userId, d.GetAllocator());
         rapidjson::Value fnv;
         fnv.SetString(firstName.c_str(), d.GetAllocator());
         rapidjson::Value av;
