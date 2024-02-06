@@ -13,6 +13,7 @@ public:
     std::function<void(const httplib::Request &, httplib::Response &)> SignIn();
     std::function<void(const httplib::Request &, httplib::Response &)> SignInForgot();
     std::function<void(const httplib::Request &, httplib::Response &)> ChangePassword();
+    std::function<void(const httplib::Request &, httplib::Response &)> SignInGoogle();
 
 
 private:

@@ -437,7 +437,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::E
 
         rapidjson::Document d;
         d.Parse(req.body.c_str());
-        bool r = UserManager::Get()->EditUser(userId, d["first_name"].GetString(), d["phone"].GetString());
+        bool r = UserManager::Get()->EditUser(userId, d["first_name"].GetString(), d["phone"].GetString(), d["whatsapp"].GetString(), d["viber"].GetString());
 
         res.status = 200;
         res.set_content("OK", "text/plain");

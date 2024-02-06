@@ -244,12 +244,76 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
     };
 }
 
+std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::SignInGoogle()
+{
+    return [](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "*");
+        res.set_header("Access-Control-Allow-Headers", "*");
+
+        std::string gtoken = req.get_header_value("Authentication");
+
+        std::string url = "https://www.googleapis.com/oauth2/v2/userinfo";
+
+        // Set up headers with the Authorization token
+        cpr::Header headers{{"Authorization", "Bearer " + gtoken}};
+
+        // Make the GET request
+        cpr::Response r = cpr::Get(cpr::Url{url}, headers);
+
+        // Check if the request was successful
+        if (r.status_code == 200) 
+        {
+            rapidjson::Document document;
+            document.Parse(r.text.c_str());
+
+            std::string name = document["name"].GetString();
+            std::string email = document["email"].GetString();
+
+            int userId;
+            DBUser* pUser =  UserManager::Get()->GetUserByEmail(email);
+            if (pUser) 
+            {   
+                userId= pUser->Id;
+                delete pUser;
+            }
+            else 
+            {
+                userId = UserManager::Get()->CreateUser(email, name);
+                if (userId < 0) 
+                {
+                    res.status = 403;
+                    res.set_content("Error", "text/plain");
+                    return;
+                }
+            }
+
+            std::string token = jwt::create()
+            .set_issuer("auth0")
+            .set_type("JWS")
+            .set_payload_claim("id", picojson::value(int64_t(userId)))
+            .set_payload_claim("auth_type", picojson::value("google"))
+            .set_payload_claim("token2", picojson::value(gtoken))
+            .sign(jwt::algorithm::hs256{"secret"});
+
+            res.status = 200;
+            res.set_content(token, "text/plain");
+            return;
+        } 
+        else 
+        {
+            res.status = 403;
+            res.set_content("Error", "text/plain");
+            return;
+        }
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::SignIn()
 {
     return [](const httplib::Request& req, httplib::Response& res) {
-    res.set_header("Access-Control-Allow-Origin", "*");
-     res.set_header("Access-Control-Allow-Methods", "*");
-      res.set_header("Access-Control-Allow-Headers", "*");
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "*");
+        res.set_header("Access-Control-Allow-Headers", "*");
 
 
         rapidjson::Document document;

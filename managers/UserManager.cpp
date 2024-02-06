@@ -18,6 +18,44 @@ UserManager* UserManager::Get()
     mPsql = pPsql;
 }*/
 
+int UserManager::CreateUser(const std::string& email, const std::string& name)
+{
+    std::string sql = "INSERT INTO users(email,first_name, num_golds) VALUES ('"
+        + email + "', '" 
+		+ name + "', " 
+        + std::to_string(20) +
+    ");";
+
+    PGconn* pg = ConnectionPool::Get()->getConnection();
+    PGresult* res = PQexec(pg, sql.c_str());
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	{
+        char* err = PQerrorMessage(pg);
+        fprintf(stderr, "Error: Failed to create user: %s", PQerrorMessage(pg));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pg);
+        return -1;
+    }
+
+    sql = "SELECT currval('users_id_seq');";
+    res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        char* err = PQerrorMessage(pg);
+        fprintf(stderr, "Error: Failed to get new user id: %s", PQerrorMessage(pg));
+        PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pg);
+        return -1;
+    }
+    char* temp = (char*)calloc(256, sizeof(char));
+    int rec_count = PQntuples(res);
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    int id = atoi(temp);
+    free(temp);
+    ConnectionPool::Get()->releaseConnection(pg);
+    return id;
+}
+
 int UserManager::CreateUser(const std::string& phone, const std::string& password, int type, const std::string& firstName)
 {
     std::string sql = "INSERT INTO users(phone, password, type, first_name, num_golds) VALUES ('"
@@ -436,9 +474,13 @@ DBUser* UserManager::GetUser(const std::string& username)
     return pUser;
 }
 
-bool UserManager::EditUser(int id, const std::string& firstName, const std::string& phone)
+bool UserManager::EditUser(int id, const std::string& firstName, const std::string& phone, const std::string& whatsapp, const std::string& viber)
 {
-    std::string sql = "UPDATE users SET first_name='" + firstName + "', phone = '" + phone + "' WHERE id = "
+    std::string sql = "UPDATE users SET first_name='" + firstName 
+        + "', phone = '" + phone 
+        + "', whatsapp = '" + whatsapp
+        + "', viber = '" + viber
+        + "' WHERE id = "
             + std::to_string(id) + ";";
 
     PGconn* pg = ConnectionPool::Get()->getConnection();
@@ -501,6 +543,56 @@ uint64_t UserManager::UserHandshake(int id)
     return ts;
 }
 
+DBUser* UserManager::GetUserByEmail(const std::string& email)
+{
+    if (email.size() <= 0) return nullptr;
+    std::string sql = "SELECT * FROM users WHERE email = '"
+                + email + "';";
+
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+
+    PGresult* res = PQexec(pConn, sql.c_str());
+	if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0)
+	{
+        char* err = PQerrorMessage(pConn);
+        fprintf(stderr, "Error: Failed to get user: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+	    //exit_nicely(conn);
+		return nullptr;
+	}
+
+	char* temp = (char*)calloc(256, sizeof(char));
+	DBUser* pUser = new DBUser();
+	strcpy(temp, PQgetvalue(res, 0, 0));
+	pUser->Id = atoi(temp);
+
+	strcpy(temp, PQgetvalue(res, 0, 1));
+	pUser->Phone = (temp);
+
+	strcpy(temp, PQgetvalue(res, 0, 2));
+	pUser->Password = (temp);
+
+	strcpy(temp, PQgetvalue(res, 0, 3));
+	pUser->Type = atoi(temp);
+
+	strcpy(temp, PQgetvalue(res, 0, 4));
+	pUser->FirstName = (temp);
+
+    strcpy(temp, PQgetvalue(res, 0, 5));
+    pUser->Avatar = (temp);
+
+    strcpy(temp, PQgetvalue(res, 0, 6));
+    pUser->NumGolds = atoi(temp);
+
+    strcpy(temp, PQgetvalue(res, 0, 7));
+    pUser->Cover = temp;
+
+    ConnectionPool::Get()->releaseConnection(pConn);
+	free(temp);
+    return pUser;
+}
+
 DBUser* UserManager::GetUser(int id)
 {
     if (id <= 0) return nullptr;
@@ -538,14 +630,23 @@ DBUser* UserManager::GetUser(int id)
 	strcpy(temp, PQgetvalue(res, 0, 4));
 	pUser->FirstName = (temp);
 
-  strcpy(temp, PQgetvalue(res, 0, 5));
-  pUser->Avatar = (temp);
+    strcpy(temp, PQgetvalue(res, 0, 5));
+    pUser->Avatar = (temp);
 
-  strcpy(temp, PQgetvalue(res, 0, 6));
-  pUser->NumGolds = atoi(temp);
+    strcpy(temp, PQgetvalue(res, 0, 6));
+    pUser->NumGolds = atoi(temp);
 
-  strcpy(temp, PQgetvalue(res, 0, 7));
-  pUser->Cover = temp;
+    strcpy(temp, PQgetvalue(res, 0, 7));
+    pUser->Cover = temp;
+
+    strcpy(temp, PQgetvalue(res, 0, 9));
+    pUser->Email = temp;
+
+    strcpy(temp, PQgetvalue(res, 0, 10));
+    pUser->WhatsApp = temp;
+
+    strcpy(temp, PQgetvalue(res, 0, 11));
+    pUser->Viber = temp;
 
 /*	strcpy(temp, PQgetvalue(res, 0, 6));
 	pUser->NumGolds = atoi(temp);

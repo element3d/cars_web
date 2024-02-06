@@ -459,6 +459,7 @@ int main(void)
     svr.Post("/api/v1/signin/forgot", AuthRoute::Get()->SignInForgot());
     svr.Post("/api/v1/signin", AuthRoute::Get()->SignIn());
     svr.Post("/api/v1/users/password", AuthRoute::Get()->ChangePassword());
+    svr.Post("/api/v1/signin/google", AuthRoute::Get()->SignInGoogle());
 
     svr.Get("/api/v1/me", UsersRoute::Get()->Me());
     svr.Get("/api/v1/me/handshake", UsersRoute::Get()->MeHandshake());
@@ -560,5 +561,5 @@ int main(void)
     auto ret = svr.set_mount_point("/assets", "./assets");
 	ret = svr.set_mount_point("/data", "./data");
 
-    svr.listen("192.168.1.6", 1234);
+    svr.listen("192.168.18.133", 1234);
 }

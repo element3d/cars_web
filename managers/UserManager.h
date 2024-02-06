@@ -15,12 +15,15 @@ struct DBUser
     int Id;
     std::string Phone;
     std::string Password;
-	  int Type;
-	  std::string FirstName;
+	int Type;
+	std::string FirstName;
     std::string Avatar;
     std::string Cover;
-	  int NumGolds;
-	  float Reputation;
+    std::string Email;
+    std::string WhatsApp;
+    std::string Viber;
+	int NumGolds;
+	float Reputation;
 
     std::string ToJson(bool addNumGolds = false)
     {
@@ -32,16 +35,25 @@ struct DBUser
         p.SetString(Phone.c_str(), d.GetAllocator());
         d.AddMember("phone", p, d.GetAllocator());
 
-		    d.AddMember("type", rapidjson::Value(Type), d.GetAllocator());
+		d.AddMember("type", rapidjson::Value(Type), d.GetAllocator());
 
-		    p.SetString(FirstName.c_str(), d.GetAllocator());
-		    d.AddMember("first_name", p, d.GetAllocator());
+		p.SetString(FirstName.c_str(), d.GetAllocator());
+		d.AddMember("first_name", p, d.GetAllocator());
 
         p.SetString(Avatar.c_str(), d.GetAllocator());
         d.AddMember("avatar", p, d.GetAllocator());
 
         p.SetString(Cover.c_str(), d.GetAllocator());
         d.AddMember("cover", p, d.GetAllocator());
+
+        p.SetString(Email.c_str(), d.GetAllocator());
+        d.AddMember("email", p, d.GetAllocator());
+
+        p.SetString(WhatsApp.c_str(), d.GetAllocator());
+        d.AddMember("whatsapp", p, d.GetAllocator());
+
+        p.SetString(Viber.c_str(), d.GetAllocator());
+        d.AddMember("viber", p, d.GetAllocator());
 
         if (addNumGolds)
             d.AddMember("num_golds", rapidjson::Value(NumGolds), d.GetAllocator());
@@ -84,10 +96,14 @@ public:
 //	void SetPG(PGconn* pPG);
 //    void SetPsql(pqxx::connection* pPsql);
     int CreateUser(const std::string& phone, const std::string& password, int type, const std::string& firstName);
+    int CreateUser(const std::string& email, const std::string& name);
+
     bool MeHandshake(int id);
     DBUser* GetUser(int id);
+    DBUser* GetUserByEmail(const std::string& email);
+
     uint64_t UserHandshake(int id);
-    bool EditUser(int id, const std::string& firstName, const std::string& phone);
+    bool EditUser(int id, const std::string& firstName, const std::string& phone, const std::string& whatsapp, const std::string& viber);
     DBUser* GetUser(const std::string& username);
     bool ChangePassword(const std::string& phone, const std::string& password);
     int GetUserNumGolds(int id);
