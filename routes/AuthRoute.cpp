@@ -306,6 +306,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
             res.set_content("Error", "text/plain");
             return;
         }
+    };
 }
 
 std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::SignIn()

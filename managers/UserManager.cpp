@@ -368,7 +368,9 @@ bool UserManager::ChangePassword(const std::string& phone, const std::string& pa
 DBUser* UserManager::GetUser(const std::string& username)
 {
     std::string sql = "SELECT * FROM users WHERE phone = '"
-            + username + "';";
+        + username 
+        + "' AND email='';";
+      
    PGconn* pg = ConnectionPool::Get()->getConnection(); //ConnectionPool::Get()->getConnection();
 
     PGresult* res = PQexec(pg, sql.c_str());
