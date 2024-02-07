@@ -369,7 +369,7 @@ DBUser* UserManager::GetUser(const std::string& username)
 {
     std::string sql = "SELECT * FROM users WHERE phone = '"
         + username 
-        + "' AND email='';";
+        + "' AND email='' or email is null;";
       
    PGconn* pg = ConnectionPool::Get()->getConnection(); //ConnectionPool::Get()->getConnection();
 
