@@ -98,6 +98,7 @@ public:
     int CreateUser(const std::string& phone, const std::string& password, int type, const std::string& firstName);
     int CreateUser(const std::string& email, const std::string& name);
 
+    bool MeDelete(int id);
     bool MeHandshake(int id);
     DBUser* GetUser(int id);
     DBUser* GetUserByEmail(const std::string& email);

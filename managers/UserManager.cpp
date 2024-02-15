@@ -369,7 +369,7 @@ DBUser* UserManager::GetUser(const std::string& username)
 {
     std::string sql = "SELECT * FROM users WHERE phone = '"
         + username 
-        + "' AND email='' or email is null;";
+        + "' AND (email='' or email is null);";
       
    PGconn* pg = ConnectionPool::Get()->getConnection(); //ConnectionPool::Get()->getConnection();
 
@@ -498,6 +498,37 @@ bool UserManager::EditUser(int id, const std::string& firstName, const std::stri
     PQclear(res);
     ConnectionPool::Get()->releaseConnection(pg);
     return true;
+}
+
+bool UserManager::MeDelete(int id)
+{
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    std::string sql = "DELETE FROM cars WHERE user_id = " + std::to_string(id) + ";";
+    PGresult* res = PQexec(pConn, sql.c_str());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	{
+        char* err = PQerrorMessage(pConn);
+        fprintf(stderr, "Error: Failed to delete user cars: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+		return false;
+	}
+    PQclear(res);
+
+    sql = "DELETE FROM users WHERE id = " + std::to_string(id) + ";";
+    res = PQexec(pConn, sql.c_str());
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	{
+        char* err = PQerrorMessage(pConn);
+        fprintf(stderr, "Error: Failed to delete user: %s", PQerrorMessage(pConn));
+		PQclear(res);
+        ConnectionPool::Get()->releaseConnection(pConn);
+		return false;
+	}
+    PQclear(res);
+
+    ConnectionPool::Get()->releaseConnection(pConn);
+    return true;   
 }
 
 bool UserManager::MeHandshake(int id)

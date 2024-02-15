@@ -49,6 +49,57 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
     };
 }
 
+std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::MeDelete()
+{
+    return [](const httplib::Request& req, httplib::Response& res){
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, OPTIONS");
+		res.set_header("Content-Type", "text/html; charset=utf-8");
+		res.set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Authentication");
+		res.set_header("Access-Control-Allow-Origin", "*");
+		res.set_header("Connection", "close");
+       
+        std::string token = req.get_header_value("Authentication");
+        auto decoded = jwt::decode(token);
+        int userId = decoded.get_payload_claim("id").as_int();
+        
+        std::string dataDir = "data";
+        // std::string dataDir = "/var/www/data";
+        std::string userDir = dataDir + "/users/" + std::to_string(userId);
+        if (stlplus::folder_exists(userDir))
+        {
+            auto all = stlplus::folder_all(userDir);
+            for (auto f : all)
+            {
+                stlplus::file_delete(userDir + "/" + f);
+            }
+            stlplus::folder_delete(userDir);
+            printf("asdf");
+        }
+
+        std::string carsDir = dataDir + "/cars/" + std::to_string(userId);
+        if (stlplus::folder_exists(carsDir))
+        {
+            auto all = stlplus::folder_all(carsDir);
+            for (auto f : all)
+            {
+                std::string carDir = carsDir + "/" + f;
+                auto allCars = stlplus::folder_all(carDir);
+                for (auto c : allCars)
+                {
+                    stlplus::file_delete(carDir + "/" + c);
+                }
+                stlplus::folder_delete(carDir);
+            }
+            stlplus::folder_delete(carsDir);
+            printf("asdf");
+        }
+
+        bool b = UserManager::Get()->MeDelete(userId);
+        res.status = 200;
+        res.set_content("OK", "text/plain");
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::MeHandshake()
 {
      return [](const httplib::Request& req, httplib::Response& res){

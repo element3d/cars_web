@@ -9,6 +9,7 @@ public:
     static UsersRoute* Get();
 
     std::function<void(const httplib::Request &, httplib::Response &)> Me();
+    std::function<void(const httplib::Request &, httplib::Response &)> MeDelete();
     std::function<void(const httplib::Request &, httplib::Response &)> MeHandshake();
     std::function<void(const httplib::Request &, httplib::Response &)> MeUploadAvatar();
     std::function<void(const httplib::Request &, httplib::Response &)> MeUpdateAvatar();
