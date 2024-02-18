@@ -460,6 +460,7 @@ int main(void)
     svr.Post("/api/v1/signin", AuthRoute::Get()->SignIn());
     svr.Post("/api/v1/users/password", AuthRoute::Get()->ChangePassword());
     svr.Post("/api/v1/signin/google", AuthRoute::Get()->SignInGoogle());
+    svr.Post("/api/v1/signin/googlemail", AuthRoute::Get()->SignInGoogleWithEmail());
 
     svr.Delete("/api/v1/me", UsersRoute::Get()->MeDelete());
     svr.Get("/api/v1/me", UsersRoute::Get()->Me());

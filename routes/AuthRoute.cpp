@@ -309,6 +309,51 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
     };
 }
 
+std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::SignInGoogleWithEmail()
+{
+    return [](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "*");
+        res.set_header("Access-Control-Allow-Headers", "*");
+
+        rapidjson::Document document;
+        document.Parse(req.body.c_str());
+
+        std::string email = document["email"].GetString();
+        std::string name = document["name"].GetString();
+       
+        int userId;
+        DBUser* pUser =  UserManager::Get()->GetUserByEmail(email);
+        if (pUser) 
+        {   
+            userId= pUser->Id;
+            delete pUser;
+        }
+        else 
+        {
+            userId = UserManager::Get()->CreateUser(email, name);
+            if (userId < 0) 
+            {
+                res.status = 403;
+                res.set_content("Error", "text/plain");
+                return;
+            }
+        }
+
+        std::string token = jwt::create()
+        .set_issuer("auth0")
+        .set_type("JWS")
+        .set_payload_claim("id", picojson::value(int64_t(userId)))
+        .set_payload_claim("auth_type", picojson::value("google"))
+        .sign(jwt::algorithm::hs256{"secret"});
+
+        res.status = 200;
+        res.set_content(token, "text/plain");
+        return;
+        
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::SignIn()
 {
     return [](const httplib::Request& req, httplib::Response& res) {
