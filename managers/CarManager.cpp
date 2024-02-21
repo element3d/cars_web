@@ -688,6 +688,15 @@ void CarManager::GetCars(const CarFilter& filter, int page, std::vector<DBCar*>&
         sql += " AND year<=" + std::to_string(filter.YearTo);
     }
 
+    if (filter.MileageFrom >= 0)
+    {
+        sql += " AND mileage>=" + std::to_string(filter.MileageFrom);
+    }
+    if (filter.MileageTo >= 0)
+    {
+        sql += " AND mileage<=" + std::to_string(filter.MileageTo);
+    }
+
     if (filter.BodyType >= 0)
     {
         sql += " AND body_type=" + std::to_string(filter.BodyType);

@@ -64,6 +64,8 @@ struct CarFilter
     int PriceTo;
     int YearFrom;
     int YearTo;
+    int MileageFrom;
+    int MileageTo;
     int BodyType;
     int DriveType;
     int EngineType;

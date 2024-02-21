@@ -787,6 +787,11 @@ void CarsRoute::_ParseFilter(const httplib::Request& req, CarFilter& filter)
     int yearTo = -1;
     if (req.has_param("year_to")) yearTo = atoi(req.get_param_value("year_to", 0).c_str());
 
+    int mileageFrom = -1;
+    if (req.has_param("mileage_from")) mileageFrom = atoi(req.get_param_value("mileage_from", 0).c_str());
+    int mileageTo = -1;
+    if (req.has_param("mileage_to")) mileageTo = atoi(req.get_param_value("mileage_to", 0).c_str());
+
     int bodyType = -1;
     if (req.has_param("body_type")) bodyType = atoi(req.get_param_value("body_type", 0).c_str());
     int driveType = -1;
@@ -831,6 +836,8 @@ void CarsRoute::_ParseFilter(const httplib::Request& req, CarFilter& filter)
     filter.PriceTo = priceTo;
     filter.YearFrom = yearFrom;
     filter.YearTo = yearTo;
+    filter.MileageFrom = mileageFrom;
+    filter.MileageTo = mileageTo;
     filter.BodyType = bodyType;
     filter.DriveType = driveType;
     filter.EngineType = engineType;
