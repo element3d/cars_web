@@ -573,7 +573,11 @@ DBCar* CarManager::GetCar(int carId)
 void CarManager::GetBandCars(const std::string& band, int limit, int page, std::vector<DBCar*>& cars)
 {
     std::string sql;
-    if (band == "luxury")
+    if (band == "ramtornado")
+    {
+        sql = "SELECT * FROM CARS WHERE body_type = 5";
+    }
+    else if (band == "luxury")
     {
         sql = "SELECT * FROM CARS WHERE class = 'mercedesbenzsclass' OR class = 'mercedesbenzglsclass' OR class = 'bmwx7' OR class = 'bmw7' OR class = 'audia8' OR class = 'bentleyflyingspur'";
     }
