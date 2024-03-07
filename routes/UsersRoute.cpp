@@ -189,6 +189,24 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
     };
 }
 
+static std::string random_string(std::size_t length)
+{
+	const std::string CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+	std::random_device random_device;
+	std::mt19937 generator(random_device());
+	std::uniform_int_distribution<> distribution(0, CHARACTERS.size() - 1);
+
+	std::string random_string;
+
+	for (std::size_t i = 0; i < length; ++i)
+	{
+		random_string += CHARACTERS[distribution(generator)];
+	}
+
+	return random_string;
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::MeUpdateAvatar()
 {
     return [](const httplib::Request& req, httplib::Response& res) {
@@ -218,7 +236,9 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
         if (!stlplus::folder_exists(userDir)) stlplus::folder_create(userDir);
 //        std::string carDir = userDir + "/" + carId;
 //        if (!stlplus::folder_exists(carDir)) stlplus::folder_create(carDir);
-        std::string filename = userDir + "/avatar.webp";
+
+        std::string fn = random_string(10);
+        std::string filename = userDir +  "/" + fn + ".webp";
 //        std::ofstream ofs(filename, std::ios::binary);
 //        ofs << image_file.content;
 
@@ -226,10 +246,12 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
         if (image_file.content_type == std::string("image/webp") || image_file.content_type == std::string("application/octet-stream")) ct = EImageContentType::Webp;
         Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, ct);
 
-        UserManager::Get()->SetUserAvatar(atoi(userId.c_str()), std::string("data/users/") + userId + "/avatar.webp");
+        UserManager::Get()->SetUserAvatar(atoi(userId.c_str()), std::string("data/users/") + userId +  "/" + fn + ".webp");
         res.status = 200;
     };
 }
+
+
 
 std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::MeUpdateCover()
 {
@@ -253,14 +275,15 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::M
         std::string userDir = carsDir + "/" + userId;
         if (!stlplus::folder_exists(userDir)) stlplus::folder_create(userDir);
 
-        std::string filename = userDir + "/cover.webp";
+        std::string fn = random_string(10);
+        std::string filename = userDir + "/" + fn + ".webp";
 
 
         EImageContentType ct = EImageContentType::Jpeg;
         if (image_file.content_type == std::string("image/webp") || image_file.content_type == std::string("application/octet-stream")) ct = EImageContentType::Webp;
         Upload((unsigned char*)image_file.content.c_str(), image_file.content.size(), filename, ct);
 
-        UserManager::Get()->SetUserCover(atoi(userId.c_str()), std::string("data/users/") + userId + "/cover.webp");
+        UserManager::Get()->SetUserCover(atoi(userId.c_str()), std::string("data/users/") + userId + "/" + fn + ".webp");
         res.status = 200;
     };
 }
