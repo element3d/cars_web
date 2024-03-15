@@ -115,6 +115,7 @@ public:
     bool UserEarnGold(int id);
     DBGift* GetUserGift(int id);
     bool UserReceiveGift(int giftId);
+    bool UserAddDevice(int userId, const std::string& device, const std::string& os);
 
     bool SetUserAvatar(int userId, const std::string& avatarPath);
     bool SetUserCover(int userId, const std::string& coverPath);

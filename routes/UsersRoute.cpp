@@ -344,6 +344,32 @@ std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::U
     };
 }
 
+std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::UserAddDevice()
+{
+     return [this](const httplib::Request& req, httplib::Response& res) {
+        std::string token = req.get_header_value("Authentication");
+        auto decoded = jwt::decode(token);
+
+        int userId = decoded.get_payload_claim("id").as_int();
+
+        rapidjson::Document d;
+        d.Parse(req.body.c_str());
+        if (!d.HasMember("fcm_token") || !d.HasMember("os"))
+        {
+            res.status = 404;
+            res.set_content("ERROR", "text/plain");
+            return;
+        }
+
+        std::string fcmToken = d["fcm_token"].GetString();
+        std::string os = d["os"].GetString();
+
+        UserManager::Get()->UserAddDevice(userId, fcmToken, os);
+        res.status = 200;
+        res.set_content("OK", "text/plain");
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> UsersRoute::UserGetAutoPartCategories()
 {
 return [this](const httplib::Request& req, httplib::Response& res) {

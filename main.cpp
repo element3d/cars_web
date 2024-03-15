@@ -480,6 +480,7 @@ int main(void)
     svr.Get("/api/v1/users/earn_gold", UsersRoute::Get()->UserEarnGold());
     svr.Get("/api/v1/users/gifts", UsersRoute::Get()->UserGetGifts());
     svr.Post("/api/v1/users/gifts/receive", UsersRoute::Get()->UserReceiveGift());
+    svr.Post("/api/v1/users/device", UsersRoute::Get()->UserAddDevice());
 
 	svr.Get("/api/v1/my_cars", CarsRoute::Get()->MyCars());
 	svr.Get("/api/v1/top_cars", CarsRoute::Get()->TopCars());

@@ -285,6 +285,53 @@ bool UserManager::UserEarnGold(int id)
     return true;
 }
 
+bool UserManager::UserAddDevice(int userId,const std::string& device, const std::string& os)
+{
+    PGconn* pg = ConnectionPool::Get()->getConnection();
+
+    std::string sql = "SELECT COUNT(*) FROM devices where user_id = " + std::to_string(userId)
+        + " AND device = '" + device + "';";
+
+    PGresult* res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
+        return false;
+    }
+    char* temp = (char*)calloc(256, sizeof(char));
+    strcpy(temp, PQgetvalue(res, 0, 0));
+    bool exists = atoi(temp) > 0;
+    PQclear(res);
+    free(temp);
+    if (exists) 
+    {
+        ConnectionPool::Get()->releaseConnection(pg);
+        return true;
+    }
+
+    sql = "INSERT INTO devices (user_id, device, os) VALUES (" + std::to_string(userId) 
+        + ",'" + device 
+        + "','" + os 
+        + "');";
+    res = PQexec(pg, sql.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pg));
+        PQclear(res);
+        //PQfinish(pg);
+        ConnectionPool::Get()->releaseConnection(pg);
+        return false;
+    }
+
+    PQclear(res);
+    //PQfinish(pg);
+    ConnectionPool::Get()->releaseConnection(pg);
+    return true;
+}
+
 bool UserManager::UserReceiveGift(int giftId)
 {
     std::string sql = "DELETE FROM gifts WHERE id = " + std::to_string(giftId) + ";";

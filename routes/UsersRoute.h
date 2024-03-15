@@ -26,6 +26,7 @@ public:
     std::function<void(const httplib::Request &, httplib::Response &)> UserEarnGold();
     std::function<void(const httplib::Request &, httplib::Response &)> UserGetGifts();
     std::function<void(const httplib::Request &, httplib::Response &)> UserReceiveGift();
+    std::function<void(const httplib::Request &, httplib::Response &)> UserAddDevice();
 private:
     static UsersRoute* sInstance;
 };

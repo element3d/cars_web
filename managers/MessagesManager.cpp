@@ -299,9 +299,74 @@ bool MessagesManager::MessagesGet(int from, int to, int page, rapidjson::Documen
     return true;
 }
 
+#include <cpr/cpr.h>
+#include <iostream>
+
 int MessagesManager::MessagesPost(int convId, int from, int to, const std::string& msg, int type, long long ts)
 {
     PGconn* pConn = ConnectionPool::Get()->getConnection();
+    {
+        std::string sql = "SELECT * FROM users WHERE id = " + std::to_string(from) + ";";
+        PGresult* res = PQexec(pConn, sql.c_str());
+	    if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	    {
+            fprintf(stderr, "Create message failed: %s", PQerrorMessage(pConn));
+		    PQclear(res);
+            ConnectionPool::Get()->releaseConnection(pConn);
+            return -1;
+	    }
+
+        char* temp = (char*)calloc(256, sizeof(char));
+        int rec_count = PQntuples(res);
+        strcpy(temp, PQgetvalue(res, 0, 4));
+        std::string name = temp;
+
+        rapidjson::Document json;
+        json.SetObject();
+        rapidjson::Value v;
+        v.SetString("f5HnNnSHTOOxNGgolNNe9q:APA91bFBL0qp2Eus07JrKQf4DzhOZdW2LeOjZA8O4F71G52ycvVA_3NrlG-LpIQtg37T6FQSVH3ikc_R2r2SRdyC3HbkzM0ZZ3AugtHrlBzwNR9ltnx-bf0qOtsMa66QI8jKkHzY5l2P");
+        json.AddMember("to", v, json.GetAllocator());
+
+        rapidjson::Value notification;
+        notification.SetObject();
+        
+        v.SetString(name.c_str(), json.GetAllocator());
+        notification.AddMember("title", v, json.GetAllocator());
+
+        v.SetString(msg.c_str(), json.GetAllocator());
+        notification.AddMember("body", v, json.GetAllocator());
+
+        json.AddMember("notification", notification, json.GetAllocator());
+
+        rapidjson::Value data;
+        data.SetObject();
+        data.AddMember("user_id", from, json.GetAllocator());
+        json.AddMember("data", data, json.GetAllocator());
+
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        json.Accept(writer);
+
+        std::string payload = buffer.GetString();
+
+
+        // Set the FCM server URL and headers
+        cpr::Url url{"https://fcm.googleapis.com/fcm/send"};
+        cpr::Header headers{{"Content-Type", "application/json"},
+                            {"Authorization", "key=AAAANq1_lc8:APA91bFM8fcx-pIpdT2DGi0kwQwvOZHXvGuYGdY52Lu9LT6QEF5fumwYwYdSq1kVUGQTjWPUb1BU8-sb3RTEniXf85-lvP1R8uW5HWrBWnAJ9pDkqIc3oUKFrxyCTcqmqmEpAslyulNH"}};
+
+        // Send the HTTP POST request to FCM server
+        auto response = cpr::Post(url, cpr::Body{payload}, headers);
+
+        // Check if the request was successful
+        if (response.status_code == 200) {
+            std::cout << "Notification sent successfully\n";
+        } else {
+            std::cerr << "Failed to send notification: " << response.text << '\n';
+        }
+
+    }
+    
     int newConvId = convId;
     if (convId < 0) 
     {
