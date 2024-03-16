@@ -324,7 +324,7 @@ int MessagesManager::MessagesPost(int convId, int from, int to, const std::strin
         rapidjson::Document json;
         json.SetObject();
         rapidjson::Value v;
-        v.SetString("f5HnNnSHTOOxNGgolNNe9q:APA91bFBL0qp2Eus07JrKQf4DzhOZdW2LeOjZA8O4F71G52ycvVA_3NrlG-LpIQtg37T6FQSVH3ikc_R2r2SRdyC3HbkzM0ZZ3AugtHrlBzwNR9ltnx-bf0qOtsMa66QI8jKkHzY5l2P");
+        v.SetString("dZgIchqtRz6dqUle9rA_MD:APA91bFbDA4aAe_U7nAcAS33r1yRADjhsopGXI7vTOGj8qg7XB2KHwtcP49B6-nXAWKBG3ll6Yt2sFMnrlP1F8EotRaU0lfDaWaCFxbesZ8UEOViLnGLIkQCfHZXFrN5ghe9-oVLi61a");
         json.AddMember("to", v, json.GetAllocator());
 
         rapidjson::Value notification;
@@ -336,11 +336,20 @@ int MessagesManager::MessagesPost(int convId, int from, int to, const std::strin
         v.SetString(msg.c_str(), json.GetAllocator());
         notification.AddMember("body", v, json.GetAllocator());
 
+        v.SetString("riders-messenger", json.GetAllocator());
+        notification.AddMember("android_channel_id", v, json.GetAllocator());
+
+        v.SetString("ic_notification", json.GetAllocator());
+        notification.AddMember("icon", v, json.GetAllocator());
+
+        v.SetString(std::to_string(from).c_str(), json.GetAllocator());
+        notification.AddMember("tag", v, json.GetAllocator());
+
         json.AddMember("notification", notification, json.GetAllocator());
 
         rapidjson::Value data;
         data.SetObject();
-        data.AddMember("user_id", from, json.GetAllocator());
+        data.AddMember("user_id", /*from*/15, json.GetAllocator());
         json.AddMember("data", data, json.GetAllocator());
 
         rapidjson::StringBuffer buffer;
