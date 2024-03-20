@@ -8,12 +8,14 @@ MessagesManager* MessagesManager::Get()
     if (!sInstance) sInstance = new MessagesManager();
     return sInstance;
 }
+#include <iostream>
 
 bool MessagesManager::MessagesGetPending(int convId, int to, long long ts, rapidjson::Document& d)
 {
     std::string sql = "SELECT * FROM messages WHERE conv_id = " + std::to_string(convId)
         + " AND msg_ts > " + std::to_string(ts)
-        + ";";
+        + " AND status != 2"
+        + " ORDER BY msg_ts DESC;";
 
     PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
@@ -29,6 +31,10 @@ bool MessagesManager::MessagesGetPending(int convId, int to, long long ts, rapid
     d.SetArray();
 
     int rec_count = PQntuples(res);
+    if (rec_count > 0) 
+    {
+        std::cout << "count: " << rec_count << " ts: " << ts << std::endl;
+    }
 	for (int i = 0; i < rec_count; i++)
 	{
         rapidjson::Value v;
@@ -144,7 +150,7 @@ uint64_t MessagesManager::_GetMessagesDeleteTs(int from, int to)
 
 int MessagesManager::_GetNumMessages(int from, int convId, uint64_t ts)
 {
-    std::string sql = "SELECT COUNT(*) FROM messages WHERE conv_id = " + std::to_string(convId) + "AND msg_ts > " + std::to_string(ts) + ";";
+    std::string sql = "SELECT COUNT(*) FROM messages WHERE conv_id = " + std::to_string(convId) + " AND msg_ts > " + std::to_string(ts) + ";";
 
     PGconn* pConn = ConnectionPool::Get()->getConnection();
     PGresult* res = PQexec(pConn, sql.c_str());
@@ -236,7 +242,9 @@ bool MessagesManager::MessagesGet(int from, int to, int page, rapidjson::Documen
         }
     }
 
-    sql = "SELECT * FROM messages WHERE conv_id = " + std::to_string(id) + "AND msg_ts > " + std::to_string(ts) + " ORDER BY msg_ts DESC limit 100 offset " + std::to_string((page - 1) * 100);
+    int pageSize = 20; // 100
+
+    sql = "SELECT * FROM messages WHERE conv_id = " + std::to_string(id) + " AND msg_ts > " + std::to_string(ts) + " ORDER BY msg_ts DESC limit 20 offset " + std::to_string((page - 1) * pageSize);
     res = PQexec(pConn, sql.c_str());
     if (PQresultStatus(res) != PGRES_TUPLES_OK)
 	{
@@ -305,6 +313,24 @@ bool MessagesManager::MessagesGet(int from, int to, int page, rapidjson::Documen
 int MessagesManager::MessagesPost(int convId, int from, int to, const std::string& msg, int type, long long ts)
 {
     PGconn* pConn = ConnectionPool::Get()->getConnection();
+    std::string device;
+    {
+        std::string sql = "SELECT device FROM devices WHERE user_id = " + std::to_string(to) + ";";
+        PGresult* res = PQexec(pConn, sql.c_str());
+        if (PQresultStatus(res) != PGRES_TUPLES_OK)
+        {
+            fprintf(stderr, "Create message failed: %s", PQerrorMessage(pConn));
+            PQclear(res);
+            ConnectionPool::Get()->releaseConnection(pConn);
+            return -1;
+        }
+
+        char* temp = (char*)calloc(256, sizeof(char));
+        int rec_count = PQntuples(res);
+        if (rec_count)
+            device = strcpy(temp, PQgetvalue(res, 0, 0));
+    }
+    if (device.size() > 0)
     {
         std::string sql = "SELECT * FROM users WHERE id = " + std::to_string(from) + ";";
         PGresult* res = PQexec(pConn, sql.c_str());
@@ -324,7 +350,7 @@ int MessagesManager::MessagesPost(int convId, int from, int to, const std::strin
         rapidjson::Document json;
         json.SetObject();
         rapidjson::Value v;
-        v.SetString("dZgIchqtRz6dqUle9rA_MD:APA91bFbDA4aAe_U7nAcAS33r1yRADjhsopGXI7vTOGj8qg7XB2KHwtcP49B6-nXAWKBG3ll6Yt2sFMnrlP1F8EotRaU0lfDaWaCFxbesZ8UEOViLnGLIkQCfHZXFrN5ghe9-oVLi61a");
+        v.SetString(device.c_str(), json.GetAllocator());
         json.AddMember("to", v, json.GetAllocator());
 
         rapidjson::Value notification;
@@ -349,7 +375,7 @@ int MessagesManager::MessagesPost(int convId, int from, int to, const std::strin
 
         rapidjson::Value data;
         data.SetObject();
-        data.AddMember("user_id", /*from*/15, json.GetAllocator());
+        data.AddMember("user_id", from, json.GetAllocator());
         json.AddMember("data", data, json.GetAllocator());
 
         rapidjson::StringBuffer buffer;
@@ -368,12 +394,15 @@ int MessagesManager::MessagesPost(int convId, int from, int to, const std::strin
         auto response = cpr::Post(url, cpr::Body{payload}, headers);
 
         // Check if the request was successful
-        if (response.status_code == 200) {
+        if (response.status_code == 200) 
+        {
             std::cout << "Notification sent successfully\n";
-        } else {
+        } 
+        else 
+        {
             std::cerr << "Failed to send notification: " << response.text << '\n';
         }
-
+        PQclear(res);
     }
     
     int newConvId = convId;
@@ -383,7 +412,7 @@ int MessagesManager::MessagesPost(int convId, int from, int to, const std::strin
     }
 
     // using namespace std::chrono;
-    // uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    // uint64_t ts = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 
     std::string sql = "INSERT INTO messages(conv_id, from_user_id, to_user_id, msg, msg_type, status, msg_ts) VALUES ("
 	    + std::to_string(newConvId) + ", "
@@ -391,7 +420,7 @@ int MessagesManager::MessagesPost(int convId, int from, int to, const std::strin
         + std::to_string(to) + ", '"
         + msg + "', "
         + std::to_string(type) + ", "
-        + std::to_string(0) + ", "
+        + std::to_string(type == (int)EMessageType::Image ? (int)EMessageStatus::InProgress : (int)EMessageStatus::Sent) + ", "
         + std::to_string(ts)
 	    + ") RETURNING id;";
 
@@ -424,7 +453,9 @@ void MessagesManager::MessagesSetImage(int msgId, const std::string& imagePath)
     }
 
     PGconn* pConn = ConnectionPool::Get()->getConnection();
-    std::string sql = "UPDATE messages set msg = '" + url + "' WHERE id = " + std::to_string(msgId) + ";";
+    std::string sql = "UPDATE messages set msg = '" + url 
+        + "', status = 0"
+        + " WHERE id = " + std::to_string(msgId) + ";";
     PGresult* res = PQexec(pConn, sql.c_str());
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {

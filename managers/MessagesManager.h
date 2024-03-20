@@ -7,6 +7,18 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
+enum class EMessageStatus
+{
+    Sent,
+    Read,
+    InProgress
+};
+
+enum class EMessageType
+{
+    Text,
+    Image
+};
 
 class MessagesManager
 {
