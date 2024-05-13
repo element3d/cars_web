@@ -967,11 +967,14 @@ void CarsRoute::ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::st
         v.SetDouble(pCar->RefreshTs);
         o.AddMember("refresh_ts", v, d.GetAllocator());
 
-    v.SetInt(pCar->Rank);
-    o.AddMember("rank", v, d.GetAllocator());
+        v.SetInt(pCar->Rank);
+        o.AddMember("rank", v, d.GetAllocator());
 
-    v.SetInt(pCar->Views);
-    o.AddMember("views", v, d.GetAllocator());
+        v.SetInt(pCar->Views);
+        o.AddMember("views", v, d.GetAllocator());
+
+        v.SetInt(pCar->IsUrgent);
+        o.AddMember("is_urgent", v, d.GetAllocator());
 
 		v.SetArray();
 		for (auto& i : pCar->Images)

@@ -51,6 +51,7 @@ struct DBCar
     uint64_t  RefreshTs;
     int Rank;
     int Views;
+    int IsUrgent;
 };
 
 struct CarFilter

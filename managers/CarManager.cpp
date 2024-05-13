@@ -1132,6 +1132,9 @@ bool CarManager::_ParseGPResult(PGresult* res, std::vector<DBCar*>& cars)
     strcpy(temp, PQgetvalue(res, i, 29));
     pCar->Views = atoi(temp);
 
+    strcpy(temp, PQgetvalue(res, i, 30));
+    pCar->IsUrgent = atoi(temp);
+
     pCar->Rank = GetCarStars(pCar->Id);
 
 		{
@@ -1372,29 +1375,82 @@ int CarManager::GetCarStars(int carId)
 void CarManager::Refresh(int carId)
 {
     using namespace std::chrono;
-
     uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-//    std::cout << ms << " milliseconds since the Epoch\n";
 
-    std::string sql = "UPDATE CARS SET refresh_ts="
-        + std::to_string(ms)
-        + " WHERE id="
-        + std::to_string(carId)
-        + ";";
+    // Get the current refresh timestamp from the database
+    std::string selectSql = "SELECT refresh_ts, refresh_count FROM CARS WHERE id=" + std::to_string(carId) + ";";
 
     PGconn* pConn = ConnectionPool::Get()->getConnection();
-    PGresult* res = PQexec(pConn, sql.c_str());
-    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    PGresult* selectRes = PQexec(pConn, selectSql.c_str());
+    if (PQresultStatus(selectRes) != PGRES_TUPLES_OK)
     {
-//        char* err = PQerrorMessage(mPG);
         fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
-//        PQclear(res);
-//        return;
-        //exit_nicely(conn);
+        PQclear(selectRes);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return;
     }
-    PQclear(res);
+
+    uint64_t refreshTs = std::stoull(PQgetvalue(selectRes, 0, 0));
+    int refreshCount = std::stoi(PQgetvalue(selectRes, 0, 1));
+    PQclear(selectRes);
+
+    // Calculate the time difference in milliseconds
+    uint64_t timeDiff = ms - refreshTs;
+
+    // Check if time difference is less than a week (7 days in milliseconds)
+    if (timeDiff < 7 * 24 * 60 * 60 * 1000)
+    {
+        // Increment refresh count
+        refreshCount++;
+
+        // Check if refresh count equals 3
+        if (refreshCount == 3)
+        {
+            // Update is_urgent and is_urgent_ts, reset refresh count
+            std::string updateSql = "UPDATE CARS SET refresh_count=0, is_urgent=1, is_urgent_ts=" + std::to_string(ms) + " WHERE id=" + std::to_string(carId) + ";";
+            PGresult* updateRes = PQexec(pConn, updateSql.c_str());
+            if (PQresultStatus(updateRes) != PGRES_COMMAND_OK)
+            {
+                fprintf(stderr, "UPDATE failed: %s", PQerrorMessage(pConn));
+                PQclear(updateRes);
+                ConnectionPool::Get()->releaseConnection(pConn);
+                return;
+            }
+            PQclear(updateRes);
+        }
+        else
+        {
+            // Just update refresh count and refresh timestamp
+            std::string updateSql = "UPDATE CARS SET refresh_count=" + std::to_string(refreshCount) + ", refresh_ts=" + std::to_string(ms) + " WHERE id=" + std::to_string(carId) + ";";
+            PGresult* updateRes = PQexec(pConn, updateSql.c_str());
+            if (PQresultStatus(updateRes) != PGRES_COMMAND_OK)
+            {
+                fprintf(stderr, "UPDATE failed: %s", PQerrorMessage(pConn));
+                PQclear(updateRes);
+                ConnectionPool::Get()->releaseConnection(pConn);
+                return;
+            }
+            PQclear(updateRes);
+        }
+    }
+    else
+    {
+        // If time difference is more than a week, just update refresh timestamp
+        std::string updateSql = "UPDATE CARS SET refresh_ts=" + std::to_string(ms) + " WHERE id=" + std::to_string(carId) + ";";
+        PGresult* updateRes = PQexec(pConn, updateSql.c_str());
+        if (PQresultStatus(updateRes) != PGRES_COMMAND_OK)
+        {
+            fprintf(stderr, "UPDATE failed: %s", PQerrorMessage(pConn));
+            PQclear(updateRes);
+            ConnectionPool::Get()->releaseConnection(pConn);
+            return;
+        }
+        PQclear(updateRes);
+    }
+
     ConnectionPool::Get()->releaseConnection(pConn);
 }
+
 
 void CarManager::RequestModel(int userId, const std::string& msg)
 {
