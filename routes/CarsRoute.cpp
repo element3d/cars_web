@@ -745,6 +745,21 @@ std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::Ca
     };
 }
 
+std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsToTop()
+{
+    return [this](const httplib::Request& req, httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Methods", " POST, GET, PUT, OPTIONS");
+        res.set_header("Access-Control-Allow-Origin", "*");
+
+        std::string carId = req.get_param_value("car_id", 0).c_str();
+
+        CarManager::Get()->ToTop(atoi(carId.c_str()));
+
+        res.status = 200;
+        res.set_content("OK", "text/plain");
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> CarsRoute::CarsRequestModel()
 {
     return [this](const httplib::Request& req, httplib::Response& res) {

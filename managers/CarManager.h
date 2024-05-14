@@ -135,6 +135,8 @@ public:
     int GetCarUserVoteStars(int carId, int userId);
     void AddView(int carId);
     void Refresh(int carId);
+    void ToTop(int carId);
+
     void RequestModel(int userId, const std::string& msg);
     void ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::string& json);
 private:

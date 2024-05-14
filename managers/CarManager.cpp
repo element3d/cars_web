@@ -1451,6 +1451,28 @@ void CarManager::Refresh(int carId)
     ConnectionPool::Get()->releaseConnection(pConn);
 }
 
+void CarManager::ToTop(int carId)
+{
+    using namespace std::chrono;
+    uint64_t ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+
+    // Get the current refresh timestamp from the database
+    std::string sql = "Update cars set on_top = 1, on_top_ts = " + std::to_string(ms) + " where id = " + std::to_string(carId) + ";";
+
+    PGconn* pConn = ConnectionPool::Get()->getConnection();
+    PGresult* selectRes = PQexec(pConn, sql.c_str());
+    if (PQresultStatus(selectRes) != PGRES_TUPLES_OK)
+    {
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(pConn));
+        PQclear(selectRes);
+        ConnectionPool::Get()->releaseConnection(pConn);
+        return;
+    }
+
+    PQclear(selectRes);
+    ConnectionPool::Get()->releaseConnection(pConn);
+}
+
 
 void CarManager::RequestModel(int userId, const std::string& msg)
 {

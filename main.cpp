@@ -499,6 +499,7 @@ int main(void)
     svr.Get("/api/v1/cars/user_stars", CarsRoute::Get()->CarsGetUserVoteStars());
     svr.Put("/api/v1/cars/view", CarsRoute::Get()->CarsAddView());
     svr.Get("/api/v1/cars/refresh", CarsRoute::Get()->CarsRefresh());
+    svr.Get("/api/v1/cars/top", CarsRoute::Get()->CarsToTop());
     svr.Post("/api/v1/cars/req_model", CarsRoute::Get()->CarsRequestModel());
 
     svr.Get("/api/v1/bands", CarsRoute::Get()->BandsGet());
