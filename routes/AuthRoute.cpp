@@ -244,6 +244,44 @@ std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::Si
     };
 }
 
+std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::SignUpV2()
+{
+     return [](const httplib::Request& req, httplib::Response& res){
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "*");
+        res.set_header("Access-Control-Allow-Headers", "*");
+
+        rapidjson::Document document;
+        document.Parse(req.body.c_str());
+
+        std::string phone = document["phone"].GetString();
+        std::string pwd = document["password"].GetString();
+
+        DBUser* pUser = UserManager::Get()->GetUser(phone);
+        if (pUser)
+        {
+            delete pUser;
+            res.status = 403;
+            res.set_content("", "text/plain");
+            return;
+        }
+
+		std::string firstName = document["name"].GetString();
+        int userId = UserManager::Get()->CreateUser(phone, pwd, 0, firstName);
+
+        std::string token;
+        int status = sign_in(phone, pwd, token);
+		if (!token.size())
+		{
+            res.status = status;
+			return;
+		}
+
+        res.status = 200;
+        res.set_content(token, "text/plain");
+    };
+}
+
 std::function<void(const httplib::Request &, httplib::Response &)> AuthRoute::SignInGoogle()
 {
     return [](const httplib::Request& req, httplib::Response& res) {

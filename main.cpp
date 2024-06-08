@@ -455,6 +455,8 @@ int main(void)
 
 
     svr.Post("/api/v1/signup", AuthRoute::Get()->SignUp());
+    svr.Post("/api/v2/signup", AuthRoute::Get()->SignUpV2());
+
     svr.Post("/api/v1/signup/verify", AuthRoute::Get()->SignUpVerify());
     svr.Post("/api/v1/signin/forgot", AuthRoute::Get()->SignInForgot());
     svr.Post("/api/v1/signin", AuthRoute::Get()->SignIn());
