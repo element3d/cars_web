@@ -164,6 +164,14 @@ std::function<void(const httplib::Request&, httplib::Response&)> CarsRoute::Band
         {
             rapidjson::Value v;
             v.SetObject();
+            v.AddMember("name", "spiderman", d.GetAllocator());
+            v.AddMember("image", "data/bands/spiderman.webp", d.GetAllocator());
+            d.PushBack(v, d.GetAllocator());
+        }
+
+        {
+            rapidjson::Value v;
+            v.SetObject();
             v.AddMember("name", "subzero", d.GetAllocator());
             v.AddMember("image", "data/bands/subzero.webp", d.GetAllocator());
             d.PushBack(v, d.GetAllocator());
