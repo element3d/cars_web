@@ -577,6 +577,10 @@ void CarManager::GetBandCars(const std::string& band, int limit, int page, std::
     {
         sql = "SELECT * FROM CARS WHERE (color = 7 OR color = 11) and engine_power >= 250";
     }
+    else if (band == "scorpion")
+    {
+        sql = "SELECT * FROM CARS WHERE (color = 5 OR color = 8 OR color = 9) and engine_power >= 250";
+    }
     else if (band == "ramtornado")
     {
         sql = "SELECT * FROM CARS WHERE body_type = 5";
