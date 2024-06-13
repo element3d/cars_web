@@ -12,7 +12,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_subdirectory(third_party/cpr)
-
+#add_subdirectory(third_party/firebase-cpp-sdk)
 add_subdirectory(libwebp)
 #find_package(WebP)
 
@@ -68,7 +68,8 @@ add_executable(cars_web
   routes/ImageUtils.cpp
   routes/MessagesRoute.h
   routes/MessagesRoute.cpp
-
+  routes/AnalyticsRoute.h
+  routes/AnalyticsRoute.cpp
 )
 
 add_executable(cron_main
@@ -102,7 +103,7 @@ target_link_libraries(cron_main
        # pthread
 
         #	"C:\\Program Files\\PostgreSQL\\9.6\\lib\\libpq.lib"
-#	${LIBS_DIR}/openssl/lib/x64/libssl.lib
-#	${LIBS_DIR}/openssl/lib/x64/libcrypto.lib
+	${LIBS_DIR}/openssl/lib/x64/libssl.lib
+	${LIBS_DIR}/openssl/lib/x64/libcrypto.lib
 )
 

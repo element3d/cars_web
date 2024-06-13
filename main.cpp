@@ -20,6 +20,7 @@
 #include "routes/AutoPartsRoute.h"
 #include "routes/EventsRoute.h"
 #include "routes/MessagesRoute.h"
+#include "routes/AnalyticsRoute.h"
 
 using namespace httplib;
 using namespace std;
@@ -541,6 +542,8 @@ int main(void)
 	svr.Get("/api/v1/top_auto_parts", AutoPartsRoute::Get()->TopAutoParts());
 	svr.Post("/api/v1/auto_parts/avatar", AutoPartsRoute::Get()->AutoPartsUploadAvatar());
 	svr.Post("/api/v1/auto_parts/image", AutoPartsRoute::Get()->AutoPartsUploadImage());
+
+    svr.Post("/api/v1/analytics/page", AnalyticsRoute::Get()->PostPage());
 
     svr.Post("/post", [](const Request &req, Response &res) {
 		req.params;
