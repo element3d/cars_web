@@ -544,6 +544,7 @@ int main(void)
 	svr.Post("/api/v1/auto_parts/image", AutoPartsRoute::Get()->AutoPartsUploadImage());
 
     svr.Post("/api/v1/analytics/page", AnalyticsRoute::Get()->PostPage());
+    svr.Post("/api/v1/analytics/event", AnalyticsRoute::Get()->PostEvent());
 
     svr.Post("/post", [](const Request &req, Response &res) {
 		req.params;
