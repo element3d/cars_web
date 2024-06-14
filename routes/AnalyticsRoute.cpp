@@ -24,7 +24,7 @@ std::function<void(const httplib::Request &, httplib::Response &)> AnalyticsRout
         rapidjson::Document document;
         document.Parse(req.body.c_str());
         std::string deviceId = document["deviceId"].GetString();
-        if (deviceId == "gh8rctmll7hiea9gwtosoo")
+        if (deviceId == "gh8rctmll7hiea9gwtosoo" || deviceId == "whp5uutudprlsyk466ivid" || deviceId == "10tuu3as942k5s9ha3361n")
         {
             res.status = 200;
             return;
