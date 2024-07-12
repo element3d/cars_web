@@ -68,7 +68,7 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
         onTopTs = 0;
     }
 
-    sql = "INSERT INTO cars(user_id , make, class, model, submodel, country, province, sub_province, price, body_type, year, engine_type, engine_size, engine_power, drive_type, transmission, stearing_wheel, exchange, customs_cleared, color, mileage, description, on_sale, on_top, on_top_ts, refresh_ts) VALUES ("
+    sql = "INSERT INTO cars(user_id , make, class, model, submodel, country, province, sub_province, price, body_type, year, engine_type, engine_size, engine_power, drive_type, transmission, stearing_wheel, exchange, customs_cleared, color, mileage, description, on_sale, on_top, on_top_ts, refresh_ts, vin) VALUES ("
         + std::to_string(userId) + ", '"
         + d["make"].GetString() + "', '"
         + d["class"].GetString() + "', '"
@@ -83,7 +83,7 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
 		+ std::to_string(d["engine_type"].GetInt()) + ", "
 		+ std::to_string(d["engine_size"].GetFloat()) + ", "
 		+ std::to_string(d["engine_power"].GetInt()) + ", "
-    + std::to_string(d["drive_type"].GetInt()) + ", "
+        + std::to_string(d["drive_type"].GetInt()) + ", "
 		+ std::to_string(d["transmission"].GetInt()) + ", "
 		+ std::to_string(d["stearing_wheel"].GetInt()) + ", "
 		+ std::to_string(d["exchange"].GetInt()) + ", "
@@ -96,7 +96,8 @@ int CarManager::CreateCar(int userId, const std::string& carJson)
 		+ std::to_string(d["on_sale"].GetInt()) + ", "
         + std::to_string(onTop) + ", "
         + std::to_string(onTopTs) + ", "
-        + std::to_string(ms) + ""
+        + std::to_string(ms) + ", '"
+        + d["vin"].GetString() + "'"
 		");";
 
 
@@ -313,6 +314,7 @@ bool CarManager::EditCar(int userId, int id, const std::string& carJson)
             + " ,on_sale=" + std::to_string(d["on_sale"].GetInt())
             + " ,mileage=" + std::to_string(d["mileage"].GetInt())
             + " ,description='" + d["description"].GetString()
+            + "' ,vin='" + d["vin"].GetString()
             + " ',on_top=" + std::to_string(onTop);
 
             if (onTopTs > 0) sql += " ,on_top_ts=" + std::to_string(onTopTs);
@@ -1150,6 +1152,9 @@ bool CarManager::_ParseGPResult(PGresult* res, std::vector<DBCar*>& cars)
 
     strcpy(temp, PQgetvalue(res, i, 30));
     pCar->IsUrgent = atoi(temp);
+
+    strcpy(temp, PQgetvalue(res, i, 33));
+    pCar->Vin = temp;
 
     pCar->Rank = GetCarStars(pCar->Id);
 

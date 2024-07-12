@@ -1023,6 +1023,9 @@ void CarsRoute::ToJson(int totalNumCars, const std::vector<DBCar*> cars, std::st
         v.SetInt(pCar->IsUrgent);
         o.AddMember("is_urgent", v, d.GetAllocator());
 
+        v.SetString(pCar->Vin.c_str(), d.GetAllocator());
+        o.AddMember("vin", v, d.GetAllocator());
+
 		v.SetArray();
 		for (auto& i : pCar->Images)
 		{

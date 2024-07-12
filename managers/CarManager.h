@@ -52,6 +52,7 @@ struct DBCar
     int Rank;
     int Views;
     int IsUrgent;
+    std::string Vin;
 };
 
 struct CarFilter
